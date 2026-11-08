@@ -1,0 +1,285 @@
+/* ------------------------------------------------------------------
+ * 样式入口
+ * 关键点：把 Element Plus 的样式放进 components 层，
+ * 使 Tailwind 的 utilities 层优先级始终高于组件默认样式，
+ * 便于用 class 直接覆盖组件（如按钮高度、内边距）。
+ * ------------------------------------------------------------------ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'element-plus/dist/index.css' layer(components);
+
+@source '../**/*.{vue,ts}';
+@source '../../index.html';
+
+@theme {
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-200: #bfd6fe;
+  --color-brand-300: #93b8fd;
+  --color-brand-400: #6092fa;
+  --color-brand-500: #3b76f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4fbc;
+  --color-brand-800: #1e4599;
+  --color-brand-900: #1e3c79;
+}
+
+/* Element Plus 主题变量（unlayered，稳定覆盖组件库默认值） */
+:root {
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #6692f1;
+  --el-color-primary-light-5: #92b1f5;
+  --el-color-primary-light-7: #bed0f9;
+  --el-color-primary-light-8: #d3e0fb;
+  --el-color-primary-light-9: #e9effd;
+  --el-color-primary-dark-2: #1e4fbc;
+
+  --el-color-success: #16a34a;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: #dc2626;
+
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-color: #e2e8f0;
+  --el-border-color-light: #e9eef5;
+  --el-border-color-lighter: #f1f5f9;
+  --el-text-color-primary: #0f172a;
+  --el-text-color-regular: #334155;
+  --el-text-color-secondary: #64748b;
+  --el-text-color-placeholder: #94a3b8;
+  --el-fill-color-light: #f8fafc;
+  --el-bg-color-page: #f6f8fb;
+
+  --el-font-family: var(--font-sans);
+  --el-font-size-base: 14px;
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: #f6f8fb;
+    color: #0f172a;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background-color: #cbd5e1;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::selection {
+    background-color: #dbe8fe;
+    color: #1e3c79;
+  }
+}
+
+@layer components {
+  /* 通用卡片 */
+  .app-card {
+    border-radius: 12px;
+    border: 1px solid #e8eef7;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .app-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 14px 18px;
+  }
+
+  /* 页面标题 */
+  .page-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+  }
+
+  /* ---------- 侧边栏菜单（深色） ---------- */
+  .sidebar-menu {
+    --el-menu-bg-color: transparent;
+    --el-menu-text-color: #94a3b8;
+    --el-menu-hover-bg-color: rgba(148, 163, 184, 0.1);
+    --el-menu-active-color: #ffffff;
+    --el-menu-item-height: 44px;
+    --el-menu-sub-item-height: 40px;
+    border-right: none;
+    padding: 6px 0;
+  }
+
+  .sidebar-menu .el-menu-item,
+  .sidebar-menu .el-sub-menu__title {
+    margin: 2px 8px;
+    border-radius: 8px;
+    font-size: 13.5px;
+  }
+
+  .sidebar-menu .el-sub-menu .el-menu-item {
+    font-size: 13px;
+  }
+
+  .sidebar-menu .el-menu-item.is-active {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.95), rgba(37, 99, 235, 0.62));
+    color: #ffffff;
+    box-shadow: 0 8px 18px -12px rgba(37, 99, 235, 0.95);
+  }
+
+  .sidebar-menu .el-sub-menu.is-active > .el-sub-menu__title {
+    color: #e2e8f0;
+  }
+
+  .sidebar-menu .el-menu--inline {
+    background-color: transparent;
+  }
+
+  /* 折叠态弹出的子菜单 */
+  .el-menu--popup {
+    background-color: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 10px;
+    padding: 6px;
+  }
+
+  .el-menu--popup .el-menu-item {
+    border-radius: 6px;
+    color: #cbd5e1;
+  }
+
+  .el-menu--popup .el-menu-item:hover {
+    background-color: rgba(148, 163, 184, 0.12);
+    color: #ffffff;
+  }
+
+  .el-menu--popup .el-menu-item.is-active {
+    background-color: rgba(37, 99, 235, 0.9);
+    color: #ffffff;
+  }
+
+  /* ---------- Element Plus 细节微调 ---------- */
+  .el-table th.el-table__cell {
+    background-color: #f8fafc;
+    font-weight: 500;
+    color: #475569;
+  }
+
+  .el-table .el-table__cell {
+    padding: 9px 0;
+  }
+
+  .el-dialog {
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    margin-right: 0;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 16px 20px;
+  }
+
+  .el-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .el-dialog__body {
+    padding: 20px;
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 12px 20px;
+  }
+
+  .el-card {
+    border-radius: 12px;
+    border-color: #e8eef7;
+  }
+
+  .el-form-item__label {
+    font-size: 13px;
+    color: #475569;
+  }
+
+  /* ---------- 路由切换动画 ---------- */
+  .fade-slide-enter-active,
+  .fade-slide-leave-active {
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .fade-slide-enter-from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  .fade-slide-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  /* ---------- NProgress ---------- */
+  #nprogress {
+    pointer-events: none;
+  }
+
+  #nprogress .bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3000;
+    height: 2px;
+    width: 100%;
+    background: #2563eb;
+  }
+
+  #nprogress .peg {
+    position: absolute;
+    right: 0;
+    display: block;
+    height: 100%;
+    width: 100px;
+    opacity: 1;
+    transform: rotate(3deg) translate(0, -4px);
+    box-shadow:
+      0 0 10px #2563eb,
+      0 0 5px #2563eb;
+  }
+}

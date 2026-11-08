@@ -1,0 +1,36 @@
+{
+  "name": "erp-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "云商 ERP · 电商中台管理系统前端",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "build:fast": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -b --force"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "axios": "^1.21.0",
+    "element-plus": "^2.14.8",
+    "nprogress": "^0.2.0",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.45",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^22.15.0",
+    "@types/nprogress": "^0.2.3",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.7",
+    "vue-tsc": "^3.3.14"
+  }
+}
