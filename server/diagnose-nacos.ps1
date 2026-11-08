@@ -21,7 +21,7 @@ if ($mysqlHealth) {
 Write-Host ""
 
 # 3. 测试 MySQL 连接
-Write-Host "[3] 测试从宿主机连接 MySQL (3307)..." -ForegroundColor Yellow
+Write-Host "[3] 测试从宿主机连接 MySQL (3306)..." -ForegroundColor Yellow
 try {
     $result = docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SELECT 1 as test;" 2>&1
     if ($LASTEXITCODE -eq 0) {
@@ -40,7 +40,7 @@ try {
     $databases = docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES LIKE 'nacos';" 2>&1
     if ($databases -match "nacos") {
         Write-Host "✓ nacos 数据库已创建" -ForegroundColor Green
-        
+
         # 检查表
         Write-Host "   检查 nacos 数据库的表..." -ForegroundColor Gray
         $tables = docker exec ecommerce-mysql mysql -uroot -proot123456 -D nacos -e "SHOW TABLES;" 2>&1
