@@ -38,3 +38,6 @@ Thumbs.db
 # 微信/其他工具缓存
 .hbuilderx
 unpackage
+
+# 本地工具目录
+.workbuddy/
