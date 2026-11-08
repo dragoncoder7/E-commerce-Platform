@@ -1,0 +1,22 @@
+# Maven
+server/**/target/
+server/**/*.iml
+server/**/.mvn/
+server/**/mvnw
+server/**/mvnw.cmd
+
+# IDE
+server/**/.idea/
+server/**/.vscode/
+server/**/.settings/
+server/**/.project
+server/**/.classpath
+server/**/.factorypath
+
+# Logs
+server/**/*.log
+server/**/logs/
+
+# Temp
+server/**/*.tmp
+server/**/*.temp
