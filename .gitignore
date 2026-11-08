@@ -1,3 +1,6 @@
+# 仓库级忽略规则（各子模块共用）
+# 通用模式不限层级，对 admin/ 等子目录同样生效
+
 # dependencies
 node_modules
 .pnpm-store
@@ -5,6 +8,8 @@ node_modules
 # build output
 dist
 dist-ssr
+build
+target
 *.local
 
 # logs
@@ -31,13 +36,9 @@ Thumbs.db
 # typescript cache
 *.tsbuildinfo
 
-# env (本地私有配置，模板见 .env.example)
+# env (本地私有配置，模板见 admin/.env.example)
 .env.local
 .env.*.local
-
-# 微信/其他工具缓存
-.hbuilderx
-unpackage
 
 # 本地工具目录
 .workbuddy/

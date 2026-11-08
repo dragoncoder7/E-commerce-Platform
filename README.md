@@ -2,11 +2,15 @@
 
 > 自己做的一个电商平台。
 
-当前仓库落地的是其中 **ERP 模块的前端工程**（电商中台管理系统），已完成登录、工作台、菜单管理三个页面，
-以及请求层、动态路由、mock 数据与 Docker 化部署；后端接口按约定预留，可直接切换联调。
+本仓库采用**多目录（monorepo）**方式组织，各模块独立成子目录、各自拥有构建与部署配置，互不干扰：
 
-- 仓库地址：https://github.com/dragoncoder7/E-commerce-Platform
-- 运行方式：全流程 Docker 化，宿主机无需安装 Node / Nginx
+| 目录 | 模块 | 技术栈 | 状态 |
+| --- | --- | --- | --- |
+| [`admin/`](./admin) | ERP 管理后台前端 | Vue 3 + TypeScript + Element Plus + Tailwind CSS + Docker | ✅ 已实现 |
+| `web/` | Web 模块（商城前端） | 待定 | ⏳ 规划中 |
+| `server/` | 后端微服务 | SpringBoot、SpringCloud、Sentinel、Spring Gateway、Nacos、Seata、MySQL、Redis | ⏳ 规划中 |
+
+> 根目录只保留仓库级文件（README、`.gitignore`、`.editorconfig` 等），不放置任何工程代码。
 
 ---
 
@@ -14,31 +18,19 @@
 
 ### 模块划分
 
-- **ERP 模块**（本仓库当前内容）
-  - 前端：Vue 3 + TypeScript + Element Plus + Tailwind CSS（详见下文技术栈）
-  - 定位：面向平台运营/管理人员的后台中台，承载商品、订单、营销、系统设置等管理能力
-- **Web 模块**（规划中）
-  - 前端：面向 C 端买家的商城站点
+- **ERP 模块**
+  - 前端 → `admin/`（本仓库当前内容），面向平台运营/管理人员的后台中台，承载商品、订单、营销、系统设置等管理能力
+  - 后端 → 与 Web 模块共用同一套微服务
+- **Web 模块**
+  - 前端 → 面向 C 端买家的商城站点
   - 后端：SpringBoot、SpringCloud、Sentinel、Spring Gateway、Nacos、Seata、MySQL、Redis
 
-### 模块与仓库的对应关系
-
-| 模块 | 子模块 | 技术栈 | 当前状态 |
-| --- | --- | --- | --- |
-| ERP 模块 | 管理后台前端 | Vue 3 / TS / Element Plus / Tailwind / Docker | ✅ 已实现（本仓库） |
-| ERP 模块 | 管理后台后端 | SpringBoot 微服务（与 Web 模块共用） | ⏳ 待开发 |
-| Web 模块 | 商城前端 | 待定 | ⏳ 待开发 |
-| Web 模块 | 商城后端 | SpringBoot、SpringCloud、Sentinel、Spring Gateway、Nacos、Seata、MySQL、Redis | ⏳ 待开发 |
-
-> 后端为微服务架构：Gateway 统一入口、Nacos 注册与配置、Sentinel 限流熔断、Seata 分布式事务，
-> 前端通过 `VITE_API_BASE_URL`（默认 `/api`）+ 开发代理 / Nginx 反代接入，业务代码无需感知服务拆分。
-
-### 前端在本架构中的位置
+### 前端在架构中的位置
 
 ```
 浏览器
   │
-  ├─ ERP 管理后台（本仓库，Nginx 托管静态资源）
+  ├─ ERP 管理后台 admin/（Nginx 托管静态资源）
   │      │  /api/**
   │      ▼
   └─ Spring Gateway ──► 各业务微服务（Nacos 注册 / Sentinel 保护 / Seata 事务）
@@ -46,9 +38,34 @@
                               └── MySQL / Redis
 ```
 
+前端通过 `VITE_API_BASE_URL`（默认 `/api`）+ 开发代理 / Nginx 反代接入网关，业务代码无需感知后端服务拆分。
+
 ---
 
-## 一、技术栈
+## 仓库结构
+
+```
+E-commerce-Platform/
+├── README.md                 # 仓库级说明（本文件）
+├── .gitignore                # 全仓库忽略规则
+├── .editorconfig             # 全仓库编码风格
+├── .gitattributes            # 换行符规范化
+└── admin/                    # ERP 管理后台前端（独立工程）
+    ├── Dockerfile            # 多阶段构建（上下文 = admin/）
+    ├── docker-compose.yml    # 生产 + dev 两套服务
+    ├── nginx/default.conf
+    ├── package.json
+    ├── vite.config.ts
+    ├── tsconfig*.json
+    ├── .env.development / .env.production / .env.example
+    └── src/
+```
+
+各子目录的 Docker / npm 命令都在**该子目录内**执行，仓库根目录不提供聚合脚本，避免模块间耦合。
+
+---
+
+## 一、admin 技术栈
 
 | 分类 | 选型 |
 | --- | --- |
@@ -65,7 +82,7 @@
 
 ---
 
-## 二、页面说明
+## 二、admin 页面说明
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
@@ -85,7 +102,11 @@
 
 ## 三、快速开始（Docker）
 
-> 所有环境都在容器里，宿主机不需要装 Node。
+> 所有环境都在容器里，宿主机不需要装 Node。以下命令均在 `admin/` 目录执行。
+
+```bash
+cd admin
+```
 
 ### 1. 生产预览（Nginx 托管构建产物）
 
@@ -101,23 +122,26 @@ docker compose --profile dev up
 # 打开 http://localhost:5173
 ```
 
-首次启动会在命名卷 `erp_node_modules` 中安装依赖，之后重启不会重复安装。
+首次启动会在命名卷 `erp-admin_admin_node_modules` 中安装依赖，之后重启不会重复安装。
 
 ### 3. 常用运维命令
 
 ```bash
-docker compose logs -f erp-web        # 查看日志
-docker compose down                   # 停止并移除容器
-docker compose build --no-cache erp-web   # 无缓存重建
-docker volume rm erp-web_erp_node_modules # 清空依赖卷（依赖变更后使用）
+cd admin
+docker compose logs -f admin-web          # 查看日志
+docker compose down                       # 停止并移除容器
+docker compose build --no-cache admin-web # 无缓存重建
+docker volume rm erp-admin_admin_node_modules  # 清空依赖卷（依赖变更后使用）
 ```
+
+Docker 相关文件的路径都以 `admin/` 为根，如需把整个仓库挂进构建上下文，请改 `docker-compose.yml` 的 `context`。
 
 ---
 
-## 四、目录结构
+## 四、admin 目录结构
 
 ```
-.
+admin/
 ├── docker-compose.yml          # 生产（默认）+ 开发（--profile dev）两套服务
 ├── Dockerfile                  # deps -> build -> runtime(nginx) 多阶段
 ├── nginx/default.conf          # SPA history 回退、静态资源缓存、/api 反向代理
@@ -151,7 +175,7 @@ docker volume rm erp-web_erp_node_modules # 清空依赖卷（依赖变更后使
 
 ---
 
-## 五、环境变量
+## 五、环境变量（admin）
 
 | 变量 | 说明 | 开发默认 | 生产默认 |
 | --- | --- | --- | --- |
@@ -161,7 +185,7 @@ docker volume rm erp-web_erp_node_modules # 清空依赖卷（依赖变更后使
 | `VITE_USE_MOCK` | 是否启用内置 mock | `true` | `false` |
 | `VITE_PROXY_TARGET` | 开发代理目标（后端网关） | `http://localhost:8080` | - |
 
-Docker 构建时可通过 build args 覆盖，`docker-compose.yml` 中默认把 `VITE_USE_MOCK` 设为 `true`，
+Docker 构建时可通过 build args 覆盖，`admin/docker-compose.yml` 中默认把 `VITE_USE_MOCK` 设为 `true`，
 因此镜像开箱即用；后端就绪后把它改成 `false` 重新构建即可。
 
 ---
@@ -170,7 +194,7 @@ Docker 构建时可通过 build args 覆盖，`docker-compose.yml` 中默认把 
 
 ### 6.1 mock 实现方式
 
-`src/mock/index.ts` 用 **axios adapter** 劫持请求，不依赖 mockjs / vite-plugin-mock：
+`admin/src/mock/index.ts` 用 **axios adapter** 劫持请求，不依赖 mockjs / vite-plugin-mock：
 
 - 支持 `:id` 形式的路径参数、query 过滤、JSON body
 - 未命中的接口返回 404 并提示 `Mock 接口未定义：GET /xxx`，方便发现漏配
@@ -179,9 +203,9 @@ Docker 构建时可通过 build args 覆盖，`docker-compose.yml` 中默认把 
 
 ### 6.2 切换真实后端（三步）
 
-1. 把 `.env.development` / `.env.production` 的 `VITE_USE_MOCK` 改为 `false`
-2. 开发环境把 `VITE_PROXY_TARGET` 指向后端网关（`vite.config.ts` 会把 `/api` 代理过去）
-3. 生产环境修改 `nginx/default.conf` 中 `location /api/` 的 `proxy_pass`
+1. 把 `admin/.env.development` / `admin/.env.production` 的 `VITE_USE_MOCK` 改为 `false`
+2. 开发环境把 `VITE_PROXY_TARGET` 指向后端网关（`admin/vite.config.ts` 会把 `/api` 代理过去）
+3. 生产环境修改 `admin/nginx/default.conf` 中 `location /api/` 的 `proxy_pass`
 
 ### 6.3 后端接口约定
 
@@ -204,7 +228,7 @@ Docker 构建时可通过 build args 覆盖，`docker-compose.yml` 中默认把 
 | DELETE | `/menu/:id` | 删除菜单（有子节点时返回业务错误） |
 
 菜单字段：`id / parentId / name / title / type(catalog|menu|button) / path / component / icon / permission / sort / visible / keepAlive / status / createTime`。
-其中 `component` 为相对 `src/views` 的路径，例如 `system/menu/index`。
+其中 `component` 为相对 `admin/src/views` 的路径，例如 `system/menu/index`。
 
 ---
 
@@ -228,14 +252,14 @@ return { path: to.path, replace: true } → 重新匹配目标路由
 侧边栏 sidebarMenus = 静态路由（工作台）+ 动态菜单
 ```
 
-**新增一个页面**：先在 `src/views` 下建 `xxx/index.vue`，再到「菜单管理」新增菜单，
+**新增一个页面**：先在 `admin/src/views` 下建 `xxx/index.vue`，再到「菜单管理」新增菜单，
 路由路径填 `/xxx`、组件路径填 `xxx/index`，保存后侧边栏立即出现，无需改代码。
 
 菜单增删改后 `permission.rebuild()` 会精确注销旧路由（按 name 记录）再重新注册，避免残留脏路由。
 
 ---
 
-## 八、请求层封装（`src/utils/request.ts`）
+## 八、请求层封装（`admin/src/utils/request.ts`）
 
 | 能力 | 说明 |
 | --- | --- |
@@ -262,7 +286,7 @@ await http.delete(`/menu/${id}`, undefined, { showError: false })
 
 ## 九、样式方案说明
 
-`src/styles/index.css` 使用 Tailwind 4 的原生级联层，把 Element Plus 放进 `components` 层：
+`admin/src/styles/index.css` 使用 Tailwind 4 的原生级联层，把 Element Plus 放进 `components` 层：
 
 ```css
 @layer theme, base, components, utilities;
@@ -282,13 +306,14 @@ await http.delete(`/menu/${id}`, undefined, { showError: false })
 
 ## 十、可选：本地命令（非必需）
 
-Docker 是唯一推荐运行方式。若本机已装 Node 22+，也可直接跑：
+Docker 是唯一推荐运行方式。若本机已装 Node 22+，也可在 `admin/` 下直接跑：
 
 ```bash
+cd admin
 npm install
 npm run dev        # http://localhost:5173
-npm run build      # vue-tsc 类型检查 + 构建到 dist
-npm run preview    # 预览 dist
+npm run build      # vue-tsc 类型检查 + 构建到 admin/dist
+npm run preview    # 预览 admin/dist
 npm run typecheck  # 仅类型检查
 ```
 
@@ -298,7 +323,7 @@ npm run typecheck  # 仅类型检查
 
 按整体架构规划，后续依次推进：
 
-**ERP 模块（前端）**
+**ERP 模块（`admin/`）**
 
 - 商品 / 订单 / 库存 / 营销等业务页面（沿用菜单管理配置的组件路径即可挂载）
 - 用户 / 角色 / 部门管理页与按钮级权限指令 `v-permission`
@@ -306,8 +331,12 @@ npm run typecheck  # 仅类型检查
 - 登录验证码、刷新 token（`refreshToken` 字段已预留）
 - 表格列配置、导出 Excel、暗色主题
 
-**ERP / Web 模块（后端）**
+**Web 模块（`web/`）**
+
+- 商城前台站点，与 `admin/` 并列独立构建
+
+**后端（`server/`）**
 
 - Spring Cloud Gateway 统一网关 + Nacos 注册配置中心
 - Sentinel 限流熔断、Seata 分布式事务
-- 商城（Web 模块）前端站点
+- 与 `admin/`、`web/` 通过网关 `/api` 对接

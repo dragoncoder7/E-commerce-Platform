@@ -1,10 +1,12 @@
-name: erp-web
+name: erp-admin
 
+# ERP 管理后台前端（Vue3 + Element Plus + Tailwind）
+# 本文件位于 admin/ 目录，构建上下文即 admin/，与仓库根目录解耦。
 services:
   # ---------- 生产预览：nginx 托管 dist ----------
-  # docker compose up -d --build   访问 http://localhost:8080
-  erp-web:
-    image: erp-web:latest
+  # cd admin && docker compose up -d --build   访问 http://localhost:8080
+  admin-web:
+    image: erp-admin-web:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,7 +15,7 @@ services:
         # 后端未就绪时保持 true，前端使用内置 mock 数据
         VITE_USE_MOCK: 'true'
         VITE_API_BASE_URL: '/api'
-    container_name: erp-web
+    container_name: erp-admin-web
     ports:
       - '8080:80'
     environment:
@@ -30,11 +32,11 @@ services:
       start_period: 5s
 
   # ---------- 开发模式：容器内跑 vite dev server ----------
-  # docker compose --profile dev up   访问 http://localhost:5173
-  erp-web-dev:
+  # cd admin && docker compose --profile dev up   访问 http://localhost:5173
+  admin-web-dev:
     profiles: ['dev']
     image: node:22-alpine
-    container_name: erp-web-dev
+    container_name: erp-admin-web-dev
     working_dir: /app
     command: sh -c "npm install --no-audit --no-fund && npm run dev"
     ports:
@@ -43,12 +45,12 @@ services:
       - TZ=Asia/Shanghai
       - CHOKIDAR_USEPOLLING=true
     volumes:
-      # 源码挂载，node_modules 使用命名卷（不污染宿主机、不跨平台混淆）
+      # 只挂载 admin 目录，node_modules 使用命名卷（不污染宿主机、不跨平台混淆）
       - ./:/app
-      - erp_node_modules:/app/node_modules
+      - admin_node_modules:/app/node_modules
     stdin_open: true
     tty: true
     restart: unless-stopped
 
 volumes:
-  erp_node_modules:
+  admin_node_modules:

@@ -1,9 +1,9 @@
 {
-  "name": "erp-web",
+  "name": "erp-admin-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "云商 ERP · 电商中台管理系统前端",
+  "description": "ERP 管理后台前端（电商中台）",
   "engines": {
     "node": ">=22"
   },

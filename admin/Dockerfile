@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 
+# ERP 管理后台前端镜像（构建上下文 = admin/ 目录）
+#
 # ---------- 依赖层 ----------
 FROM node:22-alpine AS deps
 WORKDIR /app
@@ -28,8 +30,8 @@ RUN npm run build
 
 # ---------- 运行层 ----------
 FROM nginx:1.27-alpine AS runtime
-LABEL org.opencontainers.image.title="erp-web" \
-      org.opencontainers.image.description="云商 ERP 前端（Vue3 + Element Plus + Tailwind CSS）"
+LABEL org.opencontainers.image.title="erp-admin-web" \
+      org.opencontainers.image.description="ERP 管理后台前端（Vue3 + Element Plus + Tailwind CSS）"
 
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
