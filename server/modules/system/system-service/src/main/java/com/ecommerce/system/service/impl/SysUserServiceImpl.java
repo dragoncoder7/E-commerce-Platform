@@ -1,6 +1,6 @@
 package com.ecommerce.system.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.ecommerce.system.domain.SysUser;
 import com.ecommerce.system.service.SysUserService;
 import com.ecommerce.system.mapper.SysUserMapper;

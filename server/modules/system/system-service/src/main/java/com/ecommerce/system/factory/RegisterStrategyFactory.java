@@ -26,7 +26,7 @@ public class RegisterStrategyFactory {
     public RegisterStrategy get(RegisterType type) {
         RegisterStrategy strategy = strategies.get(type);
         if (strategy == null) {
-            throw new UnsupportedRegisterTypeException(RegisterType.UNKNOWN.name());
+            throw new UnsupportedRegisterTypeException("不支持的注册方式: " + type);
         }
         return strategy;
     }

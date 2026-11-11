@@ -66,6 +66,7 @@ jwt:
 security:
   whitelist:
     - /api/auth/login
+    - /api/auth/register
     - /api/auth/logout
 
 # 日志配置

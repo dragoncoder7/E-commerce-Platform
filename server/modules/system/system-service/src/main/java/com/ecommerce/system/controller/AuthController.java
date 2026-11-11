@@ -2,6 +2,8 @@ package com.ecommerce.system.controller;
 
 import com.ecommerce.common.core.domain.Result;
 import com.ecommerce.system.api.dto.LoginDTO;
+import com.ecommerce.system.api.dto.RegisterRequest;
+import com.ecommerce.system.api.vo.RegisterVO;
 import com.ecommerce.system.api.vo.LoginVO;
 import com.ecommerce.system.api.vo.MenuVO;
 import com.ecommerce.system.api.vo.UserInfoVO;
@@ -58,7 +60,8 @@ public class AuthController {
         return Result.ok(menus);
     }
 
-    public Result<?> register() {
-
+    @PostMapping("/register")
+    public Result<RegisterVO> register(@RequestBody RegisterRequest request) {
+        return Result.ok(authService.register(request));
     }
 }

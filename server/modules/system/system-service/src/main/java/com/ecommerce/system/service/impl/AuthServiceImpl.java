@@ -7,7 +7,6 @@ import com.ecommerce.common.redis.service.RedisService;
 import com.ecommerce.common.security.util.JwtUtil;
 import com.ecommerce.system.api.dto.LoginDTO;
 import com.ecommerce.system.api.dto.RegisterRequest;
-import com.ecommerce.system.api.enums.RegisterType;
 import com.ecommerce.system.api.vo.LoginVO;
 import com.ecommerce.system.api.vo.MenuVO;
 import com.ecommerce.system.api.vo.RegisterVO;
@@ -18,7 +17,6 @@ import com.ecommerce.system.factory.RegisterStrategyFactory;
 import com.ecommerce.system.mapper.MenuMapper;
 import com.ecommerce.system.mapper.UserMapper;
 import com.ecommerce.system.service.IAuthService;
-import com.ecommerce.system.service.SysUserService;
 import com.ecommerce.system.strategy.RegisterStrategy;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 认证服务实现
@@ -51,7 +47,6 @@ public class AuthServiceImpl implements IAuthService {
     private final MenuMapper menuMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final RegisterStrategyFactory registerFactory;
-    private final SysUserService sysUserService;
 
     private static final String CACHE_KEY_PREFIX = "user:token:";
 
@@ -117,7 +112,7 @@ public class AuthServiceImpl implements IAuthService {
         Long userId = extractUserId(token);
 
         // 查询用户信息
-        User user = userMapper.selectById(userId);
+        SysUser user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(401, "用户不存在");
         }
@@ -153,19 +148,17 @@ public class AuthServiceImpl implements IAuthService {
 
 
 
-  @Override
-  public RegisterVO register(RegisterRequest request) {
-    RegisterStrategy strategy = registerFactory.get(request.getType());
-    if (strategy == null) {
-      throw new IllegalArgumentException("不支持的注册方式: " + request.getType());
+    @Override
+    public RegisterVO register(RegisterRequest request) {
+        if (request == null) {
+            throw new BusinessException("注册参数不能为空");
+        }
+        RegisterStrategy strategy = registerFactory.get(request.getType());
+        Long userId = strategy.register(request);
+        RegisterVO response = new RegisterVO();
+        response.setId(userId);
+        return response;
     }
-    
-    Long register = strategy.register(request);
-    
-    
-
-    return register;
-  }
 
   /**
      * 构建菜单树
