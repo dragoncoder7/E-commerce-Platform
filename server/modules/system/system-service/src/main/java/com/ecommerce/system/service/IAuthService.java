@@ -1,8 +1,10 @@
 package com.ecommerce.system.service;
 
 import com.ecommerce.system.api.dto.LoginDTO;
+import com.ecommerce.system.api.dto.RegisterRequest;
 import com.ecommerce.system.api.vo.LoginVO;
 import com.ecommerce.system.api.vo.MenuVO;
+import com.ecommerce.system.api.vo.RegisterVO;
 import com.ecommerce.system.api.vo.UserInfoVO;
 
 import java.util.List;
@@ -31,4 +33,9 @@ public interface IAuthService {
      * 获取用户菜单
      */
     List<MenuVO> getMenus(String token);
+
+    /**
+     * 注册
+     */
+    RegisterVO register(RegisterRequest request);
 }

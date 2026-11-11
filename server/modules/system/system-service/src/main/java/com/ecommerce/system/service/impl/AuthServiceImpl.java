@@ -6,25 +6,34 @@ import com.ecommerce.common.core.exception.BusinessException;
 import com.ecommerce.common.redis.service.RedisService;
 import com.ecommerce.common.security.util.JwtUtil;
 import com.ecommerce.system.api.dto.LoginDTO;
+import com.ecommerce.system.api.dto.RegisterRequest;
+import com.ecommerce.system.api.enums.RegisterType;
 import com.ecommerce.system.api.vo.LoginVO;
 import com.ecommerce.system.api.vo.MenuVO;
+import com.ecommerce.system.api.vo.RegisterVO;
 import com.ecommerce.system.api.vo.UserInfoVO;
 import com.ecommerce.system.domain.Menu;
-import com.ecommerce.system.domain.User;
+import com.ecommerce.system.domain.SysUser;
+import com.ecommerce.system.factory.RegisterStrategyFactory;
 import com.ecommerce.system.mapper.MenuMapper;
 import com.ecommerce.system.mapper.UserMapper;
 import com.ecommerce.system.service.IAuthService;
+import com.ecommerce.system.service.SysUserService;
+import com.ecommerce.system.strategy.RegisterStrategy;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -35,20 +44,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements IAuthService {
 
+
     private final JwtUtil jwtUtil;
     private final RedisService redisService;
     private final UserMapper userMapper;
     private final MenuMapper menuMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final RegisterStrategyFactory registerFactory;
+    private final SysUserService sysUserService;
 
     private static final String CACHE_KEY_PREFIX = "user:token:";
 
     @Override
     public LoginVO login(LoginDTO loginDTO) {
         // 1. 查询用户
-        User user = userMapper.selectOne(
-            new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, loginDTO.getUsername())
+        SysUser user = userMapper.selectOne(
+            new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUsername, loginDTO.getUsername())
         );
 
         if (user == null) {
@@ -65,6 +77,11 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException("账号已被禁用");
         }
 
+        Result result = generateLoginToken(user);
+        return new LoginVO(result.token(), result.expiration());
+    }
+
+    private @NonNull Result generateLoginToken(SysUser user) {
         // 4. 生成 Token
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
@@ -77,7 +94,11 @@ public class AuthServiceImpl implements IAuthService {
         redisService.set(cacheKey, user.getId(), expiration, TimeUnit.MILLISECONDS);
 
         log.info("用户 {} 登录成功", user.getUsername());
-        return new LoginVO(token, expiration);
+        Result result = new Result(token, expiration);
+        return result;
+    }
+
+    private record Result(String token, Long expiration) {
     }
 
     @Override
@@ -90,6 +111,7 @@ public class AuthServiceImpl implements IAuthService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public UserInfoVO getUserInfo(String token) {
         Long userId = extractUserId(token);
@@ -129,7 +151,23 @@ public class AuthServiceImpl implements IAuthService {
         return buildMenuTree(menus, 0L);
     }
 
-    /**
+
+
+  @Override
+  public RegisterVO register(RegisterRequest request) {
+    RegisterStrategy strategy = registerFactory.get(request.getType());
+    if (strategy == null) {
+      throw new IllegalArgumentException("不支持的注册方式: " + request.getType());
+    }
+    
+    Long register = strategy.register(request);
+    
+    
+
+    return register;
+  }
+
+  /**
      * 构建菜单树
      */
     private List<MenuVO> buildMenuTree(List<Menu> menus, Long parentId) {

@@ -65,6 +65,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 不支持的注册类型异常
+     */
+    @ExceptionHandler(UnsupportedRegisterTypeException.class)
+    public Result<?> handleUnsupportedRegisterTypeException(UnsupportedRegisterTypeException e) {
+        String message = e.getMessage();
+        log.error("不支持的注册类型: {}", message);
+        return Result.fail(400, message);
+    }
+
+    /**
      * 其他未捕获异常
      */
     @ExceptionHandler(Exception.class)

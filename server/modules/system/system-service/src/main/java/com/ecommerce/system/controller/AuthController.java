@@ -57,4 +57,8 @@ public class AuthController {
         List<MenuVO> menus = authService.getMenus(token);
         return Result.ok(menus);
     }
+
+    public Result<?> register() {
+
+    }
 }
