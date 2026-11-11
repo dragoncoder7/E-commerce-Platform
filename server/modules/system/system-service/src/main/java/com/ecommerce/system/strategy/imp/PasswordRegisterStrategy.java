@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @Component
@@ -43,7 +44,7 @@ public class PasswordRegisterStrategy implements RegisterStrategy {
         }
         Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUsername, request.getUsername()));
-        if (count > Numbers.ONE) {
+        if (count >= Numbers.ONE) {
             throw new BusinessException("用户名已存在");
         }
 
@@ -53,8 +54,10 @@ public class PasswordRegisterStrategy implements RegisterStrategy {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(Numbers.ONE);
         user.setDeleted(Numbers.ZERO);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
         try {
-            if (userMapper.insert(user) != Numbers.ZERO || user.getId() == null) {
+            if (userMapper.insert(user) == Numbers.ZERO || user.getId() == null) {
                 throw new BusinessException("注册失败");
             }
         } catch (DuplicateKeyException e) {
