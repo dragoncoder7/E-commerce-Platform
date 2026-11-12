@@ -2,7 +2,7 @@
 
 # 多阶段构建
 # 阶段1: 构建
-FROM maven:3.9-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /build
 
@@ -27,21 +27,20 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -pl modules/system/system-service -am
 
 # 阶段2: 运行 System Service
-FROM eclipse-temurin:17-jre-alpine AS system-service
+FROM eclipse-temurin:21-jre-alpine AS system-service
 
 WORKDIR /app
 
 # 安装 tzdata 设置时区
 RUN apk add --no-cache tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone && \
-    apk del tzdata
+    echo "Asia/Shanghai" > /etc/timezone
 
 # 复制构建产物
 COPY --from=builder /build/modules/system/system-service/target/*.jar app.jar
 
 # JVM 参数优化
-ENV JAVA_OPTS="-Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+ENV JAVA_OPTS="-Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Duser.timezone=Asia/Shanghai"
 
 EXPOSE 8081
 

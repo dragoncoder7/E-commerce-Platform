@@ -2,7 +2,7 @@
 
 # 多阶段构建
 # 阶段1: 构建
-FROM maven:3.9-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /build
 
@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -pl gateway -am
 
 # 阶段2: 运行 Gateway
-FROM eclipse-temurin:17-jre-alpine AS gateway
+FROM eclipse-temurin:21-jre-alpine AS gateway
 
 WORKDIR /app
 
