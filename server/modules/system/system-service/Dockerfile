@@ -18,7 +18,13 @@ COPY modules/system/system-service/pom.xml modules/system/system-service/
 
 # 使用 BuildKit 缓存挂载下载依赖
 # 每次构建时会重用 /root/.m2 目录中的依赖
+# 如果需要使用本地 Maven 仓库，构建时添加: --build-arg MAVEN_REPO=/path/to/local/.m2
+ARG MAVEN_REPO=""
 RUN --mount=type=cache,target=/root/.m2 \
+    if [ -n "$MAVEN_REPO" ] && [ -d "$MAVEN_REPO/repository" ]; then \
+      echo "Using local Maven repository from $MAVEN_REPO"; \
+      cp -r "$MAVEN_REPO/repository" /root/.m2/ || true; \
+    fi && \
     mvn dependency:go-offline -B
 
 # 复制源码并构建

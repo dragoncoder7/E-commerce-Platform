@@ -83,6 +83,8 @@ services:
     build:
       context: .
       dockerfile: gateway/Dockerfile
+      args:
+        MAVEN_REPO: /root/MavenJar
     container_name: ecommerce-gateway
     restart: unless-stopped
     environment:
@@ -119,6 +121,8 @@ services:
     build:
       context: .
       dockerfile: modules/system/system-service/Dockerfile
+      args:
+        MAVEN_REPO: /root/MavenJar
     container_name: ecommerce-system-service
     restart: unless-stopped
     environment:
