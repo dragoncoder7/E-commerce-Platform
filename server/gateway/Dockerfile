@@ -37,16 +37,10 @@ FROM eclipse-temurin:21-jre-alpine AS gateway
 
 WORKDIR /app
 
-# 安装 tzdata 设置时区
-RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone && \
-    apk del tzdata
-
 # 复制构建产物
 COPY --from=builder /build/gateway/target/*.jar app.jar
 
-# JVM 参数优化
+# JVM 参数优化（通过 JVM 参数设置时区，不需要安装 tzdata）
 ENV JAVA_OPTS="-Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
 EXPOSE 8080
