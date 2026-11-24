@@ -15,6 +15,15 @@ services:
         # 默认请求真实后端；演示时可通过环境变量切回 true，切换后需要重新构建
         VITE_USE_MOCK: '${VITE_USE_MOCK:-false}'
         VITE_API_BASE_URL: '/api'
+    develop:
+      watch:
+        # Nginx 使用编译产物，源码或构建配置变化后重建镜像。
+        - action: rebuild
+          path: .
+          ignore:
+            - '**/*.md'
+            - node_modules/
+            - dist/
     container_name: erp-admin-web
     ports:
       - '3000:80'
@@ -33,12 +42,17 @@ services:
 
   # ---------- 开发模式：容器内跑 vite dev server ----------
   # cd admin && docker compose --profile dev up -d admin-web-dev   访问 http://localhost:5173
+  # 使用 `docker compose --profile dev up --build --watch admin-web-dev` 启动并同步源码。
   admin-web-dev:
     profiles: ['dev']
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: erp-admin-web-dev:latest
     container_name: erp-admin-web-dev
     working_dir: /app
-    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    command: npm run dev -- --host 0.0.0.0
     ports:
       - '5173:5173'
     environment:
@@ -49,13 +63,42 @@ services:
       - VITE_PROXY_TARGET=http://host.docker.internal:8080
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    volumes:
-      # 只挂载 admin 目录，node_modules 使用命名卷（不污染宿主机、不跨平台混淆）
-      - ./:/app
-      - admin_node_modules:/app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - '**/*.tsbuildinfo'
+        - action: sync
+          path: ./index.html
+          target: /app/index.html
+        - action: sync+restart
+          path: ./vite.config.ts
+          target: /app/vite.config.ts
+        - action: sync+restart
+          path: ./tsconfig.app.json
+          target: /app/tsconfig.app.json
+        - action: sync
+          path: ./env.d.ts
+          target: /app/env.d.ts
+        - action: sync+restart
+          path: ./tsconfig.json
+          target: /app/tsconfig.json
+        - action: sync+restart
+          path: ./tsconfig.node.json
+          target: /app/tsconfig.node.json
+        - action: sync+restart
+          path: ./.env.development
+          target: /app/.env.development
+        - action: rebuild
+          path: ./Dockerfile
+        - action: rebuild
+          path: ./.dockerignore
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./package-lock.json
     stdin_open: true
     tty: true
     restart: unless-stopped
-
-volumes:
-  admin_node_modules:

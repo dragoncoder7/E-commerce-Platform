@@ -39,15 +39,29 @@ docker compose up -d --build admin-web
 
 若此前使用过 Mock 登录，请退出原账号再登录真实账号。Mock 演示账号不代表数据库中一定存在相同账号或密码。
 
-## 热更新开发模式
+## Compose Watch
+
+需要 Docker Compose 2.23.0+（`docker compose version` 查看版本）。在 `admin/` 目录运行以下任一命令，保持终端运行以持续监听。`watch` 命令按 Ctrl+C 仅停止监听；`up --watch` 按 Ctrl+C 会停止本次启动的服务。
+
+### 生产预览（端口 3000）
 
 ```powershell
-docker compose --profile dev up -d admin-web-dev
+docker compose watch admin-web
 ```
 
-访问 http://localhost:5173。Vite 也默认关闭 Mock，并代理到 `host.docker.internal:8080`。显式指定服务可避免同时启动生产预览容器。
+源码、依赖或构建输入变化后自动重建并替换 Nginx 容器，完成后刷新浏览器。也可以用 `docker compose up --build --watch admin-web` 同时查看服务日志。
 
-修改生产预览的 Mock 开关或代理配置后，需要重新执行 `docker compose up -d --build admin-web`。
+### 热更新开发模式（端口 5173）
+
+```powershell
+docker compose --profile dev up --build --watch admin-web-dev
+```
+
+首次运行自动构建开发镜像。`src/`、`index.html` 和 `env.d.ts` 同步到容器，由 Vite 热更新；Vite、TypeScript 配置和 `.env.development` 变化会同步并重启服务；依赖清单、锁文件、Dockerfile 或 `.dockerignore` 变化会重建镜像。依赖由镜像管理，不挂载宿主机源码或旧依赖卷。
+
+开发模式启动时先构建镜像，包含停止监听期间的源码、依赖及配置修改，再开启 Watch。配置不依赖较新的 `initial_sync` 字段。
+
+两个服务默认关闭 Mock，代理到 `host.docker.internal:8080`。显式指定服务可避免同时启动两种模式。`VITE_USE_MOCK` 等 Compose 环境变量变化后需重新运行启动命令；不使用 Watch 时仍可通过 `docker compose up -d --build admin-web` 启动生产预览。
 
 ## 检查接口
 

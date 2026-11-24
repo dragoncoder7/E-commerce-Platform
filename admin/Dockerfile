@@ -11,6 +11,11 @@ COPY package.json package-lock.json* ./
 RUN npm ci --no-audit --no-fund \
     || (echo "[deps] npm ci 失败，回退 npm install" && npm install --no-audit --no-fund)
 
+# ---------- 开发层：保留源码快照，Compose Watch 负责后续同步 ----------
+FROM deps AS dev
+WORKDIR /app
+COPY . .
+
 # ---------- 构建层 ----------
 FROM deps AS build
 WORKDIR /app
