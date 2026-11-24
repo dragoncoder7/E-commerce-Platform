@@ -30,7 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public Result<LoginVO> login(@Validated @RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = authService.login(loginDTO);
-        return Result.ok(loginVO);
+        return Result.success(loginVO);
     }
 
     /**
@@ -39,7 +39,7 @@ public class AuthController {
     @PostMapping("/logout")
     public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String token) {
         authService.logout(token);
-        return Result.ok();
+        return Result.success();
     }
 
     /**
@@ -48,7 +48,7 @@ public class AuthController {
     @GetMapping("/userinfo")
     public Result<UserInfoVO> getUserInfo(@RequestHeader("Authorization") String token) {
         UserInfoVO userInfo = authService.getUserInfo(token);
-        return Result.ok(userInfo);
+        return Result.success(userInfo);
     }
 
     /**
@@ -57,11 +57,11 @@ public class AuthController {
     @GetMapping("/menus")
     public Result<List<MenuVO>> getMenus(@RequestHeader("Authorization") String token) {
         List<MenuVO> menus = authService.getMenus(token);
-        return Result.ok(menus);
+        return Result.success(menus);
     }
 
     @PostMapping("/register")
     public Result<RegisterVO> register(@RequestBody RegisterRequest request) {
-        return Result.ok(authService.register(request));
+        return Result.success(authService.register(request));
     }
 }

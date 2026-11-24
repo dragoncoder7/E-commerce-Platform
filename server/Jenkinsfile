@@ -1,0 +1,413 @@
+pipeline {
+    agent any
+    
+    // 环境变量配置
+    environment {
+        // Git 仓库配置
+        GIT_REPO = 'https://github.com/dragoncoder7/E-commerce-Platform.git'
+        GIT_BRANCH = 'main'
+        GIT_CREDENTIALS = 'github-credentials' // Jenkins 中配置的 Git 凭证 ID
+        
+        // 项目配置
+        PROJECT_NAME = 'e-commerce-platform'
+        
+        // Maven 配置
+        MAVEN_HOME = tool 'Maven-3.9' // Jenkins 中配置的 Maven 工具名称
+        MAVEN_OPTS = '-Xmx1024m -Xms512m'
+        
+        // Docker 配置
+        DOCKER_IMAGE = "ecommerce-platform:${BUILD_NUMBER}"
+        DOCKER_REGISTRY = '' // 如果使用私有仓库，填写地址，如 'registry.example.com'
+        DOCKER_CREDENTIALS = 'docker-hub-credentials' // Docker 仓库凭证 ID
+        
+        // 部署配置
+        DEPLOY_SERVER = '192.168.1.100' // 部署服务器 IP
+        DEPLOY_USER = 'deploy' // 部署用户
+        DEPLOY_PATH = '/opt/apps/e-commerce-platform' // 部署路径
+        DEPLOY_PORT = '8080' // 应用端口
+        SSH_CREDENTIALS = 'deploy-ssh-key' // SSH 凭证 ID
+    }
+    
+    // 定义构建参数（可选）
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['dev', 'test', 'prod'],
+            description: '部署环境'
+        )
+        booleanParam(
+            name: 'SKIP_TESTS',
+            defaultValue: false,
+            description: '是否跳过测试'
+        )
+        booleanParam(
+            name: 'BUILD_DOCKER',
+            defaultValue: true,
+            description: '是否构建 Docker 镜像'
+        )
+    }
+    
+    // 构建触发器（可选）
+    triggers {
+        // 定时构建：每天凌晨 2 点
+        cron('0 2 * * *')
+        // GitHub webhook 触发
+        githubPush()
+    }
+    
+    stages {
+        stage('准备环境') {
+            steps {
+                script {
+                    echo "========== 开始构建 =========="
+                    echo "构建编号: ${BUILD_NUMBER}"
+                    echo "部署环境: ${params.DEPLOY_ENV}"
+                    echo "Git 分支: ${GIT_BRANCH}"
+                }
+            }
+        }
+        
+        stage('拉取代码') {
+            steps {
+                script {
+                    echo "========== 拉取 Git 代码 =========="
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${GIT_BRANCH}"]],
+                        userRemoteConfigs: [[
+                            url: "${GIT_REPO}",
+                            credentialsId: "${GIT_CREDENTIALS}"
+                        ]],
+                        extensions: [
+                            [$class: 'CloneOption', depth: 1, noTags: false, shallow: true]
+                        ]
+                    ])
+                    
+                    // 显示最近的提交信息
+                    sh '''
+                        echo "最新提交信息:"
+                        git log -1 --pretty=format:"%h - %an, %ar : %s"
+                    '''
+                }
+            }
+        }
+        
+        stage('代码检查') {
+            steps {
+                script {
+                    echo "========== 代码质量检查 =========="
+                    // 使用 SonarQube 进行代码质量分析（如果配置了）
+                    try {
+                        sh '''
+                            ${MAVEN_HOME}/bin/mvn sonar:sonar \
+                                -Dsonar.projectKey=${PROJECT_NAME} \
+                                -Dsonar.host.url=http://sonarqube:9000
+                        '''
+                    } catch (Exception e) {
+                        echo "警告: SonarQube 扫描失败或未配置，跳过此步骤"
+                    }
+                }
+            }
+        }
+        
+        stage('Maven 构建') {
+            steps {
+                script {
+                    echo "========== Maven 清理和编译 =========="
+                    def skipTestsFlag = params.SKIP_TESTS ? '-DskipTests' : ''
+                    
+                    sh """
+                        ${MAVEN_HOME}/bin/mvn clean package ${skipTestsFlag} \
+                            -Dmaven.test.failure.ignore=false \
+                            -P ${params.DEPLOY_ENV}
+                    """
+                }
+            }
+        }
+        
+        stage('单元测试') {
+            when {
+                expression { !params.SKIP_TESTS }
+            }
+            steps {
+                script {
+                    echo "========== 运行单元测试 =========="
+                    sh "${MAVEN_HOME}/bin/mvn test"
+                }
+            }
+            post {
+                always {
+                    // 发布测试报告
+                    junit '**/target/surefire-reports/*.xml'
+                    // 发布测试覆盖率报告（如果使用 JaCoCo）
+                    jacoco(
+                        execPattern: '**/target/jacoco.exec',
+                        classPattern: '**/target/classes',
+                        sourcePattern: '**/src/main/java'
+                    )
+                }
+            }
+        }
+        
+        stage('构建 Docker 镜像') {
+            when {
+                expression { params.BUILD_DOCKER }
+            }
+            steps {
+                script {
+                    echo "========== 构建 Docker 镜像 =========="
+                    
+                    // 检查 Dockerfile 是否存在，不存在则创建
+                    sh '''
+                        if [ ! -f Dockerfile ]; then
+                            echo "创建默认 Dockerfile"
+                            cat > Dockerfile << 'EOF'
+FROM openjdk:17-jdk-slim
+
+LABEL maintainer="dragoncoder7"
+LABEL description="E-commerce Platform"
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制 jar 包
+COPY target/*.jar app.jar
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 暴露端口
+EXPOSE 8080
+
+# JVM 参数
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC"
+
+# 启动应用
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+EOF
+                        fi
+                    '''
+                    
+                    // 构建镜像
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    
+                    // 如果配置了 Docker 仓库，推送镜像
+                    if (env.DOCKER_REGISTRY) {
+                        withCredentials([usernamePassword(
+                            credentialsId: "${DOCKER_CREDENTIALS}",
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh """
+                                echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin ${DOCKER_REGISTRY}
+                                docker tag ${DOCKER_IMAGE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE}
+                                docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}
+                                docker logout ${DOCKER_REGISTRY}
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('停止旧服务') {
+            steps {
+                script {
+                    echo "========== 停止旧服务 =========="
+                    sshagent([env.SSH_CREDENTIALS]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
+                                # 停止 Docker 容器
+                                if [ "\$(docker ps -q -f name=${PROJECT_NAME})" ]; then
+                                    echo "停止现有容器..."
+                                    docker stop ${PROJECT_NAME} || true
+                                    docker rm ${PROJECT_NAME} || true
+                                fi
+                                
+                                # 或者停止 systemd 服务
+                                if systemctl is-active --quiet ${PROJECT_NAME}; then
+                                    echo "停止 systemd 服务..."
+                                    sudo systemctl stop ${PROJECT_NAME}
+                                fi
+                                
+                                # 或者直接 kill Java 进程
+                                PID=\$(ps aux | grep "java.*${PROJECT_NAME}" | grep -v grep | awk "{print \\\$2}")
+                                if [ ! -z "\$PID" ]; then
+                                    echo "终止进程 \$PID..."
+                                    kill -9 \$PID || true
+                                fi
+                            '
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('部署应用') {
+            steps {
+                script {
+                    echo "========== 部署应用到服务器 =========="
+                    
+                    if (params.BUILD_DOCKER) {
+                        // Docker 方式部署
+                        sshagent([env.SSH_CREDENTIALS]) {
+                            sh """
+                                # 传输镜像（如果没有使用 Docker Registry）
+                                if [ -z "${DOCKER_REGISTRY}" ]; then
+                                    docker save ${DOCKER_IMAGE} | ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} 'docker load'
+                                fi
+                                
+                                # 远程启动容器
+                                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
+                                    docker run -d \
+                                        --name ${PROJECT_NAME} \
+                                        --restart=always \
+                                        -p ${DEPLOY_PORT}:8080 \
+                                        -e SPRING_PROFILES_ACTIVE=${params.DEPLOY_ENV} \
+                                        -v /data/logs/${PROJECT_NAME}:/app/logs \
+                                        ${DOCKER_REGISTRY ? DOCKER_REGISTRY + "/" : ""}${DOCKER_IMAGE}
+                                    
+                                    echo "容器已启动"
+                                    docker ps | grep ${PROJECT_NAME}
+                                '
+                            """
+                        }
+                    } else {
+                        // JAR 包方式部署
+                        sshagent([env.SSH_CREDENTIALS]) {
+                            sh """
+                                # 创建部署目录
+                                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                                    mkdir -p ${DEPLOY_PATH}/{bin,logs,backup}
+                                "
+                                
+                                # 备份旧版本
+                                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                                    if [ -f ${DEPLOY_PATH}/app.jar ]; then
+                                        cp ${DEPLOY_PATH}/app.jar ${DEPLOY_PATH}/backup/app.jar.\$(date +%Y%m%d_%H%M%S)
+                                    fi
+                                "
+                                
+                                # 传输 JAR 包
+                                scp -o StrictHostKeyChecking=no target/*.jar ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}/app.jar
+                                
+                                # 传输启动脚本
+                                cat > start.sh << 'EOFSCRIPT'
+#!/bin/bash
+JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC"
+SPRING_OPTS="--spring.profiles.active=${params.DEPLOY_ENV}"
+nohup java \$JAVA_OPTS -jar ${DEPLOY_PATH}/app.jar \$SPRING_OPTS > ${DEPLOY_PATH}/logs/app.log 2>&1 &
+echo \$! > ${DEPLOY_PATH}/app.pid
+echo "应用已启动，PID: \$(cat ${DEPLOY_PATH}/app.pid)"
+EOFSCRIPT
+                                
+                                scp -o StrictHostKeyChecking=no start.sh ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}/bin/
+                                
+                                # 启动应用
+                                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                                    chmod +x ${DEPLOY_PATH}/bin/start.sh
+                                    ${DEPLOY_PATH}/bin/start.sh
+                                "
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('健康检查') {
+            steps {
+                script {
+                    echo "========== 应用健康检查 =========="
+                    retry(5) {
+                        sleep(time: 10, unit: 'SECONDS')
+                        sh """
+                            curl -f http://${DEPLOY_SERVER}:${DEPLOY_PORT}/actuator/health || \
+                            curl -f http://${DEPLOY_SERVER}:${DEPLOY_PORT}/ || \
+                            exit 1
+                        """
+                    }
+                    echo "应用启动成功！"
+                }
+            }
+        }
+        
+        stage('清理工作空间') {
+            steps {
+                script {
+                    echo "========== 清理旧的 Docker 镜像 =========="
+                    sh '''
+                        # 清理构建过程中的悬空镜像
+                        docker image prune -f
+                        
+                        # 保留最近 3 个版本的镜像，删除更老的
+                        docker images | grep ecommerce-platform | awk '{print $2}' | tail -n +4 | xargs -r docker rmi || true
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "========== 构建流程结束 =========="
+            // 清理工作空间
+            cleanWs()
+        }
+        
+        success {
+            echo "========== ✅ 构建成功 =========="
+            // 发送成功通知（邮件、钉钉、企业微信等）
+            script {
+                try {
+                    emailext(
+                        subject: "✅ Jenkins 构建成功: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        body: """
+                            <h2>构建成功</h2>
+                            <p><strong>项目:</strong> ${env.JOB_NAME}</p>
+                            <p><strong>构建编号:</strong> ${env.BUILD_NUMBER}</p>
+                            <p><strong>部署环境:</strong> ${params.DEPLOY_ENV}</p>
+                            <p><strong>Git 分支:</strong> ${GIT_BRANCH}</p>
+                            <p><strong>构建时间:</strong> ${new Date()}</p>
+                            <p><strong>应用地址:</strong> http://${DEPLOY_SERVER}:${DEPLOY_PORT}</p>
+                            <p><a href="${env.BUILD_URL}">查看构建详情</a></p>
+                        """,
+                        to: 'your-email@example.com',
+                        mimeType: 'text/html'
+                    )
+                } catch (Exception e) {
+                    echo "邮件发送失败: ${e.message}"
+                }
+            }
+        }
+        
+        failure {
+            echo "========== ❌ 构建失败 =========="
+            // 发送失败通知
+            script {
+                try {
+                    emailext(
+                        subject: "❌ Jenkins 构建失败: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        body: """
+                            <h2 style='color:red'>构建失败</h2>
+                            <p><strong>项目:</strong> ${env.JOB_NAME}</p>
+                            <p><strong>构建编号:</strong> ${env.BUILD_NUMBER}</p>
+                            <p><strong>失败阶段:</strong> ${env.STAGE_NAME}</p>
+                            <p><strong>构建时间:</strong> ${new Date()}</p>
+                            <p><a href="${env.BUILD_URL}console">查看控制台输出</a></p>
+                        """,
+                        to: 'your-email@example.com',
+                        mimeType: 'text/html'
+                    )
+                } catch (Exception e) {
+                    echo "邮件发送失败: ${e.message}"
+                }
+            }
+        }
+        
+        unstable {
+            echo "========== ⚠️ 构建不稳定 =========="
+        }
+    }
+}

@@ -39,21 +39,21 @@ public class Result<T> implements Serializable {
     /**
      * 成功返回（无数据）
      */
-    public static <T> Result<T> ok() {
+    public static <T> Result<T> success() {
         return new Result<>(200, "操作成功", null, System.currentTimeMillis());
     }
 
     /**
      * 成功返回（有数据）
      */
-    public static <T> Result<T> ok(T data) {
+    public static <T> Result<T> success(T data) {
         return new Result<>(200, "操作成功", data, System.currentTimeMillis());
     }
 
     /**
-     * 成功返回（自定义消息）
+     * 成功返回（自定义消息和数据）
      */
-    public static <T> Result<T> ok(String message, T data) {
+    public static <T> Result<T> success(String message, T data) {
         return new Result<>(200, message, data, System.currentTimeMillis());
     }
 
@@ -69,12 +69,5 @@ public class Result<T> implements Serializable {
      */
     public static <T> Result<T> fail(Integer code, String message) {
         return new Result<>(code, message, null, System.currentTimeMillis());
-    }
-
-    /**
-     * 根据布尔值返回成功或失败
-     */
-    public static <T> Result<T> status(boolean flag) {
-        return flag ? ok() : fail("操作失败");
     }
 }

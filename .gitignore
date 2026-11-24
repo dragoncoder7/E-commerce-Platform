@@ -40,5 +40,8 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# 含私有密钥的系统服务本地配置（保留 .example 模板）
+/server/modules/system/system-service/src/main/resources/application-local.yml
+
 # 本地工具目录
 .workbuddy/

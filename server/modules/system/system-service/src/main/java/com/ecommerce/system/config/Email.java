@@ -4,6 +4,7 @@ import com.resend.Resend;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
 @Configuration
 public class Email {
@@ -14,6 +15,7 @@ public class Email {
 
     @Bean
     public Resend resend() {
+        Assert.hasText(apiKey, "Configure resend.api-key in application-local.yml or set RESEND_API_KEY");
         return new Resend(apiKey);
     }
 }

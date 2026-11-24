@@ -8,7 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 /**
  * 系统服务启动类
  */
-@EnableDiscoveryClient
+//@EnableDiscoveryClient
 @MapperScan("com.ecommerce.system.mapper")
 @SpringBootApplication(scanBasePackages = "com.ecommerce")
 public class SystemApplication {

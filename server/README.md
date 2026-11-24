@@ -4,9 +4,11 @@
 
 ### 邮件服务密钥
 
-启动 `system-service` 前，在运行环境中设置 `RESEND_API_KEY`。本地开发请在 IDE 的运行配置中添加该环境变量；Docker Compose 会将宿主机的同名环境变量传入容器。密钥缺失时会提示配置错误。
+`system-service` 默认使用 `local` 配置。本地首次运行时，将 `modules/system/system-service/src/main/resources/application-local.yml.example` 复制为同目录下的 `application-local.yml`，在其中设置 `resend.api-key`。`application.yml` 通过 `${RESEND_API_KEY:${resend.api-key:}}` 引用该值，环境变量 `RESEND_API_KEY` 优先。未配置密钥时，服务启动会给出明确提示。
 
-真实密钥不得写入 Java、YAML 或提交到 Git。已进入 Git 提交的旧密钥应在 Resend 控制台撤销，并使用新密钥配置运行环境。
+Docker Compose 显式启用 `docker` 配置，不加载本地配置；部署时设置宿主机环境变量 `RESEND_API_KEY`，Compose 会将其传入容器。其他非本地配置也需提供密钥。
+
+`application-local.yml` 已被 Git 忽略，真实密钥只保存在该本地文件或运行环境中，不得写入模板或提交到 Git。已进入 Git 提交的旧密钥应在 Resend 控制台撤销，并替换为新密钥。
 
 ### 方式一：Docker Compose（推荐）
 

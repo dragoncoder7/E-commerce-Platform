@@ -2,10 +2,12 @@ server:
   port: 8081
 
 spring:
+  profiles:
+    default: local
   email:
     resend:
-      # 在运行环境中设置 RESEND_API_KEY，禁止将真实密钥写入仓库
-      apiKey: ${RESEND_API_KEY}
+      # 本地密钥来自 application-local.yml；环境变量可覆盖本地配置
+      apiKey: ${RESEND_API_KEY:${resend.api-key:}}
   application:
     name: system-service
   config:
@@ -13,24 +15,24 @@ spring:
       # 注意：dataId 的扩展名必须与 file-extension 一致（yml，不是 yaml）
       - optional:nacos:${spring.application.name}.yml
   cloud:
-    nacos:
-      discovery:
-        server-addr: ${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:127.0.0.1:8848}
-        # namespace 必须填命名空间 ID，不是名称
-        namespace: ${NACOS_NAMESPACE:public}
-        group: DEFAULT_GROUP
-        register-enabled: true
-      config:
-        server-addr: ${SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:public}
-        group: DEFAULT_GROUP
-        file-extension: yml
+#    nacos:
+#      discovery:
+#        server-addr: ${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:127.0.0.1:8848}
+#        # namespace 必须填命名空间 ID，不是名称
+#        namespace: ${NACOS_NAMESPACE:public}
+#        group: DEFAULT_GROUP
+#        register-enabled: true
+#      config:
+#        server-addr: ${SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR:127.0.0.1:8848}
+#        namespace: ${NACOS_NAMESPACE:public}
+#        group: DEFAULT_GROUP
+#        file-extension: yml
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ecommerce_system?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:root123456}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
     druid:
       initial-size: 5
       min-idle: 5
