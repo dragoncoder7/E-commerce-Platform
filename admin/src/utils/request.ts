@@ -139,6 +139,9 @@ instance.interceptors.request.use(
     const token = getToken()
     if (token && config.withToken !== false) {
       config.headers.set('Authorization', `Bearer ${token}`)
+    } else {
+      // Never reuse an inherited or stale credential after logout / on public requests.
+      config.headers.delete('Authorization')
     }
     addPending(config)
     return config

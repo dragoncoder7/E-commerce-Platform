@@ -364,11 +364,7 @@ export function setupMock(instance: AxiosInstance): void {
 
     const method = (config.method ?? 'get').toUpperCase()
     const normalized = normalizePath(pathname)
-    const token = String(
-      (config.headers as Record<string, unknown> | undefined)?.Authorization ??
-        (config.headers as Record<string, unknown> | undefined)?.authorization ??
-        '',
-    ).replace(/^Bearer\s+/i, '')
+    const token = String(config.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
 
     const route = routes.find(
       (item) => item.method === method && matchPath(item.path, normalized) !== null,

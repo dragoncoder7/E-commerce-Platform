@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { ElMessage } from 'element-plus'
 import { getUserInfoApi, getMenuTreeApi, loginApi, logoutApi } from '@/api/auth'
 import type { LoginParams, UserInfo } from '@/types/api'
 import type { MenuItem } from '@/types/menu'
@@ -24,8 +25,14 @@ export const useUserStore = defineStore('user', () => {
 
   async function login(payload: LoginParams): Promise<void> {
     const result = await loginApi(payload)
-    token.value = result.token
-    setToken(result.token)
+    try {
+      setToken(result?.token)
+    } catch (error) {
+      reset()
+      ElMessage.error(error instanceof Error ? error.message : '登录响应缺少有效 token')
+      throw error
+    }
+    token.value = getToken()
     setRememberedAccount(payload.remember ? payload.username : '')
   }
 

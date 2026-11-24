@@ -5,7 +5,7 @@ import type { MenuItem } from '@/types/menu'
 
 /** 账号密码登录 */
 export function loginApi(data: LoginParams) {
-  return http.post<LoginResult>('/auth/login', data)
+  return http.post<LoginResult>('/auth/login', data, { withToken: false })
 }
 
 /** 退出登录 */

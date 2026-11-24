@@ -91,5 +91,3 @@ CREATE TABLE `product_brand` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_brand_code` (`brand_code`, `deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-show tables;
