@@ -3,6 +3,7 @@ package com.ecommerce.common.security.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,11 @@ public class JwtUtil {
     @Value("${jwt.secret:ecommerce-platform-secret-key-for-jwt-token-generation-must-be-at-least-256-bits}")
     private String secret;
 
+    /**
+     * -- GETTER --
+     *  获取过期时间（毫秒）
+     */
+    @Getter
     @Value("${jwt.expiration:7200000}")
     private Long expiration;
 
@@ -87,10 +93,4 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * 获取过期时间（毫秒）
-     */
-    public Long getExpiration() {
-        return expiration;
-    }
 }

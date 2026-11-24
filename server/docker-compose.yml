@@ -122,10 +122,12 @@ services:
       context: .
       dockerfile: modules/system/system-service/Dockerfile
       args:
-        MAVEN_REPO: /root/MavenJar
+         # MAVEN_REPO: /root/MavenJar #Linux
+         MAVEN_REPO: D:\\MavenJar #Windows
     container_name: ecommerce-system-service
     restart: unless-stopped
     environment:
+      RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY before starting system-service}
       TZ: Asia/Shanghai
       SPRING_PROFILES_ACTIVE: docker
       SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848

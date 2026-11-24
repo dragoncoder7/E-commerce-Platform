@@ -2,6 +2,12 @@
 
 ## 快速启动
 
+### 邮件服务密钥
+
+启动 `system-service` 前，在运行环境中设置 `RESEND_API_KEY`。本地开发请在 IDE 的运行配置中添加该环境变量；Docker Compose 会将宿主机的同名环境变量传入容器。密钥缺失时会提示配置错误。
+
+真实密钥不得写入 Java、YAML 或提交到 Git。已进入 Git 提交的旧密钥应在 Resend 控制台撤销，并使用新密钥配置运行环境。
+
 ### 方式一：Docker Compose（推荐）
 
 #### Windows

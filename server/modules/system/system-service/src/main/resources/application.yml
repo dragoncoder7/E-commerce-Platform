@@ -2,6 +2,10 @@ server:
   port: 8081
 
 spring:
+  email:
+    resend:
+      # 在运行环境中设置 RESEND_API_KEY，禁止将真实密钥写入仓库
+      apiKey: ${RESEND_API_KEY}
   application:
     name: system-service
   config:

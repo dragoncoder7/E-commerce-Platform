@@ -61,6 +61,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Alipay SDK -->
+            <dependency>
+                <groupId>com.alipay.sdk</groupId>
+                <artifactId>alipay-sdk-java</artifactId>
+                <version>4.40.1085.ALL</version>
+            </dependency>
+
             <!-- Spring Cloud -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
