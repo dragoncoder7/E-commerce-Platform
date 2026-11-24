@@ -38,13 +38,13 @@ Write-Host ""
 
 # 4. 验证数据库初始化
 Write-Host "[4/5] 验证数据库初始化..." -ForegroundColor Yellow
-$databases = docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES;" 2>&1
+$databases = docker exec ecommerce-mysql mysql -uroot -proot -e "SHOW DATABASES;" 2>&1
 
 if ($databases -match "nacos") {
     Write-Host "✓ nacos 数据库存在" -ForegroundColor Green
 } else {
     Write-Host "✗ nacos 数据库不存在，尝试手动初始化..." -ForegroundColor Yellow
-    docker exec -i ecommerce-mysql mysql -uroot -proot123456 < sql/init.sql
+    docker exec -i ecommerce-mysql mysql -uroot -proot < sql/init.sql
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ 数据库初始化成功" -ForegroundColor Green
     } else {

@@ -1,0 +1,39 @@
+spring:
+  email:
+    resend:
+      apiKey: ${RESEND_API_KEY:}
+
+  # 禁用 Nacos（集成测试不需要服务发现）
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+  # 使用内存数据库 H2（避免依赖真实 MySQL）
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+  # 禁用 Redis（如果不需要）
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.ecommerce: debug

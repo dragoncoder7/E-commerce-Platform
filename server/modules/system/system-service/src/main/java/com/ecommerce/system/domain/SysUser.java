@@ -73,4 +73,7 @@ public class SysUser implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    /** 最近一次成功登录时间。 */
+    private LocalDateTime lastLoginTime;
 }

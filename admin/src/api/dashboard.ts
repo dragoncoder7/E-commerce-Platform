@@ -7,7 +7,7 @@ export interface StatCard {
   /** 单位后缀，如 元 / 单 / 人 */
   unit: string
   /** 环比变化百分比，正数上升，负数下降 */
-  trend: number
+  trend: number | null
   /** 统计口径说明 */
   hint: string
 }
@@ -35,5 +35,5 @@ export interface DashboardSummary {
 
 /** 工作台概览数据 */
 export function getDashboardSummaryApi() {
-  return http.get<DashboardSummary>('/dashboard/summary')
+  return http.get<DashboardSummary>('/dashboard/summary', undefined, { showError: false })
 }

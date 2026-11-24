@@ -18,14 +18,19 @@ public class Product {
     
     private Long categoryId;
     
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long brandId;
     
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String mainImage;
     
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String subTitle;
     
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String description;
     
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal originalPrice;
     
     private BigDecimal salePrice;

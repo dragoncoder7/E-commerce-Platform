@@ -163,6 +163,7 @@ const routes: MockRoute[] = [
     auth: true,
     handler: ({ account }) => {
       const info: UserInfo = {
+        id: account!.username === 'admin' ? 1001 : 1002,
         userId: account!.username === 'admin' ? 1001 : 1002,
         username: account!.username,
         nickname: account!.nickname,

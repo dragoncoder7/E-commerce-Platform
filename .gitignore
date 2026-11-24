@@ -45,3 +45,5 @@ Thumbs.db
 
 # 本地工具目录
 .workbuddy/
+/server/.env
+/.dsh-acl-recovery/

@@ -49,6 +49,7 @@ CREATE TABLE `sys_user` (
   `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
   `email` VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
   `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
+  `last_login_time` DATETIME DEFAULT NULL COMMENT '最近一次成功登录时间',
   `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0-禁用 1-启用',
   `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

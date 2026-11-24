@@ -47,7 +47,7 @@ echo ========================================
 echo Nacos:          http://localhost:8848/nacos (nacos/nacos)
 echo API Gateway:    http://localhost:8080
 echo System Service: http://localhost:8081
-echo MySQL:          localhost:3306 (root/root123456)
+echo MySQL:          localhost:3306 (root/root)
 echo Redis:          localhost:6379
 echo.
 echo ========================================

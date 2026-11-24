@@ -3,9 +3,9 @@ package com.ecommerce.system;
 import com.ecommerce.system.service.EmailService;
 import com.resend.core.exception.ResendException;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -15,12 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 邮件发送集成测试
- * 
  * 注意：此测试会真实发送邮件，需要：
  * 1. 有效的 Resend API Key
  * 2. 发件人邮箱域名已在 Resend 验证
  * 3. 收件人邮箱真实存在
- * 
  * 默认禁用（@Disabled），手动运行时移除该注解
  */
 @Slf4j
@@ -32,9 +30,29 @@ public class EmailIntegrationTest {
     @Autowired
     private EmailService emailService;
 
+    @Value("${spring.email.resend.apiKey}")
+    private String apiKey;
+
+    /**
+     * 测试 API Key 配置
+     */
+    @Test
+    public void testApiKeyConfiguration() {
+        log.info("=== API Key 配置检查 ===");
+        log.info("API Key 是否为空: {}", apiKey == null || apiKey.isEmpty());
+        log.info("API Key 长度: {}", apiKey != null ? apiKey.length() : 0);
+        log.info("API Key 是否包含空格: {}", apiKey != null && apiKey.contains(" "));
+
+        assertNotNull(apiKey, "API Key 不能为空");
+        assertFalse(apiKey.trim().isEmpty(), "API Key 不能为空字符串");
+        assertTrue(apiKey.startsWith("re_"), "API Key 应该以 're_' 开头");
+        assertFalse(apiKey.contains(" "), "API Key 不应该包含空格");
+        assertTrue(apiKey.length() > 20, "API Key 长度应该大于20个字符");
+    }
+
     /**
      * 测试真实邮件发送
-     * 
+     *
      * 注意事项：
      * 1. from 邮箱必须是已验证的域名（如 onboarding@resend.dev 或自己的域名）
      * 2. 测试前确认 API Key 有效
@@ -56,7 +74,7 @@ public class EmailIntegrationTest {
         String emailId = emailService.sendEmail(from, to, subject, content);
 
         log.info("邮件发送成功！Email ID: {}", emailId);
-        
+
         assertNotNull(emailId, "邮件 ID 不应为空");
         assertFalse(emailId.isEmpty(), "邮件 ID 不应为空字符串");
     }
@@ -66,7 +84,7 @@ public class EmailIntegrationTest {
      */
     @Test
     public void testSendToMultipleRecipients() throws ResendException {
-        String from = "onboarding@resend.dev";
+        String from = "noreply-accounts@skydragon.icu";
         List<String> to = List.of("1026225160@qq.com", "1434964624@qq.com", "1206614724@qq.com");
         String subject = "批量邮件测试";
         String content = "<h2>批量邮件测试</h2><p>这封邮件发送给多个收件人。</p>";
@@ -89,9 +107,7 @@ public class EmailIntegrationTest {
         String content = "测试内容";
 
         log.info("测试无效发件人场景...");
-        
-        assertThrows(ResendException.class, () -> {
-            emailService.sendEmail(invalidFrom, to, subject, content);
-        }, "使用未验证的域名应该抛出异常");
+
+        assertThrows(ResendException.class, () -> emailService.sendEmail(invalidFrom, to, subject, content), "使用未验证的域名应该抛出异常");
     }
 }

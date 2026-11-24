@@ -77,7 +77,7 @@ Write-Host ""
 
 Write-Host "服务信息:" -ForegroundColor Yellow
 Write-Host "  MySQL:   localhost:3306" -ForegroundColor White
-Write-Host "           用户: root / 密码: root123456" -ForegroundColor Gray
+Write-Host "           用户: root / 密码: root" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Redis:   localhost:6379" -ForegroundColor White
 Write-Host "           密码: redis123456" -ForegroundColor Gray

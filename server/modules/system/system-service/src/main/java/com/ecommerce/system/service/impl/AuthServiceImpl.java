@@ -51,11 +51,13 @@ public class AuthServiceImpl implements IAuthService {
     private static final String CACHE_KEY_PREFIX = "user:token:";
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public LoginVO login(LoginDTO loginDTO) {
         // 1. 查询用户
         SysUser user = userMapper.selectOne(
             new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUsername, loginDTO.getUsername())
+                .last("FOR UPDATE")
         );
 
         if (user == null) {
@@ -72,6 +74,11 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException("账号已被禁用");
         }
 
+        SysUser loginUpdate = new SysUser();
+        loginUpdate.setId(user.getId());
+        loginUpdate.setLastLoginTime(java.time.LocalDateTime.now());
+        loginUpdate.setUpdateTime(loginUpdate.getLastLoginTime());
+        userMapper.updateById(loginUpdate);
         Result result = generateLoginToken(user);
         return new LoginVO(result.token(), result.expiration());
     }
@@ -81,6 +88,9 @@ public class AuthServiceImpl implements IAuthService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("username", user.getUsername());
+        if (user.getLastLoginTime() != null) {
+            claims.put("lastLoginTime", user.getLastLoginTime().toString());
+        }
         String token = jwtUtil.generateToken(user.getUsername(), claims);
         Long expiration = jwtUtil.getExpiration();
 
@@ -129,6 +139,10 @@ public class AuthServiceImpl implements IAuthService {
         userInfo.setUsername(user.getUsername());
         userInfo.setNickname(user.getNickname());
         userInfo.setAvatar(user.getAvatar());
+        userInfo.setEmail(user.getEmail());
+        userInfo.setPhone(user.getPhone());
+        // 本次登录之前的时间保存在会话中，刷新页面或其他会话登录不会改变它。
+        userInfo.setLastLoginTime(jwtUtil.parseToken(token.substring(7)).get("lastLoginTime", String.class));
         userInfo.setRoles(roles);
         userInfo.setPermissions(permissions);
 

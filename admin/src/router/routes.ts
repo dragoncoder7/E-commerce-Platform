@@ -26,6 +26,18 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '工作台', icon: 'HomeFilled', affix: true },
       },
       {
+        path: 'product/category',
+        name: 'ProductCategoryManagement',
+        component: () => import('@/views/product/category/index.vue'),
+        meta: { title: '商品类别', icon: 'Menu' },
+      },
+      {
+        path: 'product',
+        name: 'ProductManagement',
+        component: () => import('@/views/product/index.vue'),
+        meta: { title: '商品管理', icon: 'Goods' },
+      },
+      {
         // 兜底路由放在布局内：菜单组件路径填写错误时仍保留导航，方便切换
         path: ':pathMatch(.*)*',
         name: 'NotFound',

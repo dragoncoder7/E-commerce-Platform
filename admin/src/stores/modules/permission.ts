@@ -148,8 +148,11 @@ export const usePermissionStore = defineStore('permission', () => {
 
   /** 生成并注册动态路由 */
   function generateRoutes(menus: MenuItem[]): RouteRecordRaw[] {
-    menuTree.value = menus
-    const routes = buildRoutes(menus)
+    const staticPaths = new Set((constantRoutes.find((route) => route.path === '/')?.children ?? [])
+      .filter((route) => !route.meta?.hidden).map((route) => `/${String(route.path)}`))
+    const businessMenus = menus.filter((menu) => !staticPaths.has(menu.path))
+    menuTree.value = businessMenus
+    const routes = buildRoutes(businessMenus)
 
     routes.forEach((route) => {
       const names = collectRouteNames(route, [])

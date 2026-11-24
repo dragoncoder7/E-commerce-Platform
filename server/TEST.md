@@ -286,7 +286,7 @@ curl -X GET http://localhost:8080/api/auth/userinfo \
 ### 连接数据库
 
 ```bash
-docker exec -it ecommerce-mysql mysql -uroot -proot123456 ecommerce_system
+docker exec -it ecommerce-mysql mysql -uroot -proot ecommerce_system
 ```
 
 ### 查询用户表
@@ -461,7 +461,7 @@ docker-compose logs -f service-name
 
 1. 检查数据库是否初始化：
    ```bash
-   docker exec -it ecommerce-mysql mysql -uroot -proot123456 -e "USE ecommerce_system; SELECT COUNT(*) FROM sys_user;"
+   docker exec -it ecommerce-mysql mysql -uroot -proot -e "USE ecommerce_system; SELECT COUNT(*) FROM sys_user;"
    ```
 
 2. 检查 Redis 连接：

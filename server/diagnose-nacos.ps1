@@ -23,7 +23,7 @@ Write-Host ""
 # 3. 测试 MySQL 连接
 Write-Host "[3] 测试从宿主机连接 MySQL (3306)..." -ForegroundColor Yellow
 try {
-    $result = docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SELECT 1 as test;" 2>&1
+    $result = docker exec ecommerce-mysql mysql -uroot -proot -e "SELECT 1 as test;" 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ MySQL 连接成功" -ForegroundColor Green
     } else {
@@ -37,13 +37,13 @@ Write-Host ""
 # 4. 检查 nacos 数据库是否存在
 Write-Host "[4] 检查 nacos 数据库..." -ForegroundColor Yellow
 try {
-    $databases = docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES LIKE 'nacos';" 2>&1
+    $databases = docker exec ecommerce-mysql mysql -uroot -proot -e "SHOW DATABASES LIKE 'nacos';" 2>&1
     if ($databases -match "nacos") {
         Write-Host "✓ nacos 数据库已创建" -ForegroundColor Green
 
         # 检查表
         Write-Host "   检查 nacos 数据库的表..." -ForegroundColor Gray
-        $tables = docker exec ecommerce-mysql mysql -uroot -proot123456 -D nacos -e "SHOW TABLES;" 2>&1
+        $tables = docker exec ecommerce-mysql mysql -uroot -proot -D nacos -e "SHOW TABLES;" 2>&1
         if ($tables -match "config_info") {
             Write-Host "   ✓ nacos 表结构已初始化" -ForegroundColor Green
         } else {
@@ -81,7 +81,7 @@ if ($mysqlHealth -ne "healthy") {
 
 if (-not ($databases -match "nacos")) {
     Write-Host "→ nacos 数据库未创建，手动初始化:" -ForegroundColor Cyan
-    Write-Host "   docker exec -i ecommerce-mysql mysql -uroot -proot123456 < sql/init.sql" -ForegroundColor White
+    Write-Host "   docker exec -i ecommerce-mysql mysql -uroot -proot < sql/init.sql" -ForegroundColor White
     Write-Host ""
 }
 

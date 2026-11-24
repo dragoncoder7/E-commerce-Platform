@@ -52,7 +52,7 @@ docker-compose down -v
 | Nacos 控制台 | http://localhost:8848/nacos | 用户名/密码: nacos/nacos |
 | API 网关 | http://localhost:8080 | 统一入口 |
 | 系统服务 | http://localhost:8081 | 直接访问（通常通过网关） |
-| MySQL | localhost:3306 | root/root123456 |
+| MySQL | localhost:3306 | root/root |
 | Redis | localhost:6379 | 无密码 |
 
 ## 测试接口
@@ -179,7 +179,7 @@ curl -X GET http://localhost:8080/api/auth/menus \
 
 3. 手动连接测试：
    ```bash
-   docker exec -it ecommerce-mysql mysql -uroot -proot123456
+   docker exec -it ecommerce-mysql mysql -uroot -proot
    ```
 
 ## 开发模式

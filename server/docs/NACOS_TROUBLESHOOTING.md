@@ -59,7 +59,7 @@ docker-compose restart nacos
 **检查**:
 ```powershell
 # 进入 MySQL 容器检查
-docker exec -it ecommerce-mysql mysql -uroot -proot123456
+docker exec -it ecommerce-mysql mysql -uroot -proot
 
 # 在 MySQL 中执行
 SHOW DATABASES;
@@ -70,10 +70,10 @@ SHOW TABLES;
 **修复**:
 ```powershell
 # 手动执行初始化脚本
-docker exec -i ecommerce-mysql mysql -uroot -proot123456 < sql/init.sql
+docker exec -i ecommerce-mysql mysql -uroot -proot < sql/init.sql
 
 # 验证
-docker exec ecommerce-mysql mysql -uroot -proot123456 -e "USE nacos; SHOW TABLES;"
+docker exec ecommerce-mysql mysql -uroot -proot -e "USE nacos; SHOW TABLES;"
 ```
 
 ### 原因 3: Nacos 配置错误
@@ -88,7 +88,7 @@ nacos:
     MYSQL_SERVICE_HOST: mysql          # ← 容器内使用服务名
     MYSQL_SERVICE_DB_NAME: nacos       # ← 数据库名必须是 nacos
     MYSQL_SERVICE_USER: root
-    MYSQL_SERVICE_PASSWORD: root123456
+    MYSQL_SERVICE_PASSWORD: root
 ```
 
 ### 原因 4: 端口冲突
@@ -159,7 +159,7 @@ curl http://localhost:8848/nacos/v1/console/health/readiness
 Host: localhost (或 127.0.0.1)
 Port: 3306                    ← 注意是 3306
 User: root
-Password: root123456
+Password: root
 ```
 
 **为什么是 3306？**
@@ -199,7 +199,7 @@ SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_system
 主机: 127.0.0.1
 端口: 3306
 用户名: root
-密码: root123456
+密码: root
 ```
 
 ### DBeaver
@@ -209,7 +209,7 @@ Server Host: localhost
 Port: 3306
 Database: nacos (或 ecommerce_system)
 Username: root
-Password: root123456
+Password: root
 ```
 
 ### MySQL Workbench
@@ -218,16 +218,16 @@ Password: root123456
 Hostname: 127.0.0.1
 Port: 3306
 Username: root
-Password: root123456
+Password: root
 ```
 
 ### 命令行（mysql 客户端）
 
 ```powershell
-mysql -h 127.0.0.1 -P 3306 -uroot -proot123456
+mysql -h 127.0.0.1 -P 3306 -uroot -proot
 
 # 或者通过 Docker
-docker exec -it ecommerce-mysql mysql -uroot -proot123456
+docker exec -it ecommerce-mysql mysql -uroot -proot
 ```
 
 ---
@@ -255,7 +255,7 @@ docker-compose up -d mysql
 Start-Sleep -Seconds 30
 
 # 6. 验证数据库
-docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES;"
+docker exec ecommerce-mysql mysql -uroot -proot -e "SHOW DATABASES;"
 
 # 7. 启动所有服务
 docker-compose up -d
@@ -364,6 +364,6 @@ docker exec ecommerce-nacos ping mysql
 
 1. `docker-compose ps` 输出
 2. `docker-compose logs nacos --tail 100` 输出
-3. `docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES;"` 输出
+3. `docker exec ecommerce-mysql mysql -uroot -proot -e "SHOW DATABASES;"` 输出
 
 这样我可以更准确地诊断问题。

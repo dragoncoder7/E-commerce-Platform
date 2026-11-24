@@ -121,7 +121,7 @@ http://localhost:8848/nacos（nacos/nacos）
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| MySQL | 3306 | 数据库（root/root123456） |
+| MySQL | 3306 | 数据库（root/root） |
 | Redis | 6379 | 缓存（无密码） |
 | Nacos | 8848, 9848 | 服务注册与配置中心 |
 | Gateway | 8080 | API 网关（统一入口） |

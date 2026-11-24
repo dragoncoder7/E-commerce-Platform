@@ -175,16 +175,16 @@ docker-compose -f docker-compose.dev.yml down -v
 
 ```powershell
 # 进入 MySQL 容器
-docker exec -it ecommerce-mysql mysql -uroot -proot123456
+docker exec -it ecommerce-mysql mysql -uroot -proot
 
 # 执行 SQL 文件
-docker exec -i ecommerce-mysql mysql -uroot -proot123456 ecommerce_system < sql/schema.sql
+docker exec -i ecommerce-mysql mysql -uroot -proot ecommerce_system < sql/schema.sql
 
 # 查看数据库
-docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SHOW DATABASES;"
+docker exec ecommerce-mysql mysql -uroot -proot -e "SHOW DATABASES;"
 
 # 查看表
-docker exec ecommerce-mysql mysql -uroot -proot123456 -D ecommerce_system -e "SHOW TABLES;"
+docker exec ecommerce-mysql mysql -uroot -proot -D ecommerce_system -e "SHOW TABLES;"
 ```
 
 ### Redis 管理
@@ -330,10 +330,10 @@ com.mysql.cj.jdbc.exceptions.CommunicationsException
 
 **解决**:
 1. 确认端口：`localhost:3306`（不是 3306）
-2. 检查密码：`root123456`
+2. 检查密码：`root`
 3. 测试连接：
    ```powershell
-   docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SELECT 1"
+   docker exec ecommerce-mysql mysql -uroot -proot -e "SELECT 1"
    ```
 
 ---

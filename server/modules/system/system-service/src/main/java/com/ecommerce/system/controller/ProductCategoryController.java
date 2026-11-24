@@ -3,6 +3,9 @@ package com.ecommerce.system.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecommerce.common.core.domain.Result;
+import com.ecommerce.common.core.exception.BusinessException;
+import com.ecommerce.system.dto.CategorySaveRequest;
+import jakarta.validation.Valid;
 import com.ecommerce.system.entity.ProductCategory;
 import com.ecommerce.system.service.ProductCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,12 @@ public class ProductCategoryController {
     @Autowired
     private ProductCategoryService productCategoryService;
     
+    @GetMapping("/all")
+    public Result<List<ProductCategory>> all() {
+        return Result.success(productCategoryService.list(new LambdaQueryWrapper<ProductCategory>()
+                .orderByAsc(ProductCategory::getSortOrder).orderByAsc(ProductCategory::getId)));
+    }
+
     @GetMapping("/tree")
     public Result<List<ProductCategory>> getTree() {
         List<ProductCategory> list = productCategoryService.getTreeList();
@@ -57,20 +66,19 @@ public class ProductCategoryController {
     }
     
     @PostMapping
-    public Result<String> save(@RequestBody ProductCategory category) {
-        boolean success = productCategoryService.save(category);
-        return success ? Result.success("添加成功") : Result.fail("添加失败");
+    public Result<ProductCategory> save(@Valid @RequestBody CategorySaveRequest category) {
+        return Result.success(productCategoryService.saveCategory(category, false));
     }
-    
+
     @PutMapping
-    public Result<String> update(@RequestBody ProductCategory category) {
-        boolean success = productCategoryService.updateById(category);
-        return success ? Result.success("更新成功") : Result.fail("更新失败");
+    public Result<ProductCategory> update(@Valid @RequestBody CategorySaveRequest category) {
+        if (category.getId() == null) throw new BusinessException(400, "请选择要编辑的类别");
+        return Result.success(productCategoryService.saveCategory(category, true));
     }
-    
+
     @DeleteMapping("/{id}")
-    public Result<String> delete(@PathVariable Long id) {
-        boolean success = productCategoryService.removeById(id);
-        return success ? Result.success("删除成功") : Result.fail("删除失败");
+    public Result<Void> delete(@PathVariable Long id) {
+        productCategoryService.deleteCategory(id);
+        return Result.success();
     }
 }

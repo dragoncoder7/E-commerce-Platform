@@ -22,6 +22,8 @@ const userStore = useUserStore()
 
 const loading = ref(true)
 const summary = ref<DashboardSummary | null>(null)
+const summaryError = ref('')
+const lastLoginText = computed(() => userStore.userInfo?.lastLoginTime?.replace('T', ' ') || '暂无历史记录')
 
 const stats = computed(() => summary.value?.stats ?? [])
 const todos = computed(() => summary.value?.todos ?? [])
@@ -71,14 +73,21 @@ function formatNumber(value: number): string {
 
 async function loadSummary(): Promise<void> {
   loading.value = true
+  summaryError.value = ''
   try {
     summary.value = await getDashboardSummaryApi()
+  } catch {
+    summaryError.value = '工作台数据暂时加载失败，请重试；其他功能仍可使用。'
   } finally {
     loading.value = false
   }
 }
 
 function handleQuickAction(key: string): void {
+  if (key === 'goods') {
+    void router.push({ path: '/product', query: { action: 'create' } })
+    return
+  }
   if (key === 'menu') {
     void router.push('/system/menu')
     return
@@ -108,7 +117,7 @@ onMounted(loadSummary)
         <div class="flex items-center gap-6 text-white">
           <div class="text-right">
             <p class="text-[11px] text-slate-400">上次登录</p>
-            <p class="mt-1 text-[13px] font-medium">{{ userStore.userInfo?.lastLoginTime || '--' }}</p>
+            <p class="mt-1 text-[13px] font-medium">{{ lastLoginText }}</p>
           </div>
           <div class="h-9 w-px bg-white/10"></div>
           <div class="text-right">
@@ -118,6 +127,10 @@ onMounted(loadSummary)
         </div>
       </div>
     </section>
+
+    <el-alert v-if="summaryError" type="warning" :closable="false" show-icon>
+      <template #title>{{ summaryError }} <el-button link type="primary" :loading="loading" @click="loadSummary">重新加载</el-button></template>
+    </el-alert>
 
     <!-- 核心指标 -->
     <section
@@ -132,6 +145,7 @@ onMounted(loadSummary)
         <div class="flex items-center justify-between">
           <p class="text-[12.5px] text-slate-500">{{ stat.label }}</p>
           <span
+            v-if="stat.trend !== null"
             class="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
             :class="
               stat.trend > 0
@@ -191,6 +205,7 @@ onMounted(loadSummary)
               {{ todos.length }} 项待处理
             </span>
           </div>
+          <el-empty v-if="!todos.length" description="暂无待办事项" :image-size="48" />
           <ul class="divide-y divide-slate-50">
             <li
               v-for="todo in todos"
@@ -215,6 +230,7 @@ onMounted(loadSummary)
             <h3 class="text-[14px] font-semibold text-slate-800">系统公告</h3>
             <el-icon class="text-slate-300"><Tickets /></el-icon>
           </div>
+          <el-empty v-if="!notices.length" description="暂无公告" :image-size="48" />
           <ul class="divide-y divide-slate-50">
             <li v-for="notice in notices" :key="notice.id" class="cursor-pointer px-5 py-3 hover:bg-slate-50/70">
               <div class="flex items-center gap-2">

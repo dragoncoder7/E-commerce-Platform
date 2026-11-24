@@ -162,7 +162,7 @@ curl -X GET http://localhost:8080/api/auth/userinfo \
 
 ### 5. 验证数据库
 ```bash
-docker exec -it ecommerce-mysql mysql -uroot -proot123456 ecommerce_system -e "SELECT username, nickname FROM sys_user;"
+docker exec -it ecommerce-mysql mysql -uroot -proot ecommerce_system -e "SELECT username, nickname FROM sys_user;"
 ```
 
 **预期输出**:
@@ -234,7 +234,7 @@ docker-compose logs -f system-service
 
 **手动执行初始化**:
 ```bash
-docker exec -i ecommerce-mysql mysql -uroot -proot123456 < sql/init.sql
+docker exec -i ecommerce-mysql mysql -uroot -proot < sql/init.sql
 ```
 
 ---

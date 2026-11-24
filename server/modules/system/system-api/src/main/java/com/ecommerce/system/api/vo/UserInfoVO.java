@@ -33,6 +33,10 @@ public class UserInfoVO implements Serializable {
      */
     private String avatar;
 
+    private String email;
+    private String phone;
+    private String lastLoginTime;
+
     /**
      * 角色列表
      */

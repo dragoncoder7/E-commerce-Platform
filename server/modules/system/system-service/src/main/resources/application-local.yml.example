@@ -1,6 +1,9 @@
+# 复制为 application-local.yml 后填写真实密钥；请勿在此模板中填写密钥
+resend:
+  api-key: "replace-with-your-resend-api-key"
+
 server:
   port: 8081
-
 spring:
   application:
     name: system-service
@@ -19,7 +22,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/ecommerce_system?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: root123456
+    password: root
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       minimum-idle: 5

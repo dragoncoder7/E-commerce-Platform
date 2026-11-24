@@ -26,7 +26,8 @@ export interface LoginResult {
 
 /** 当前登录用户信息 */
 export interface UserInfo {
-  userId: number
+  id: number
+  userId?: number
   username: string
   nickname: string
   avatar: string
@@ -35,5 +36,5 @@ export interface UserInfo {
   deptName: string
   roles: string[]
   permissions: string[]
-  lastLoginTime: string
+  lastLoginTime: string | null
 }
