@@ -31,7 +31,7 @@ spring:
         - id: system-service
           uri: lb://system-service
           predicates:
-            - Path=/api/auth/**,/api/menu/**,/api/dashboard/**
+            - Path=/api/auth/**,/api/menu/**,/api/dashboard/**,/api/product/**,/api/upload/**
           filters:
             - StripPrefix=1
       globalcors:

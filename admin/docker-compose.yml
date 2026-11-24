@@ -4,7 +4,7 @@ name: erp-admin
 # 本文件位于 admin/ 目录，构建上下文即 admin/，与仓库根目录解耦。
 services:
   # ---------- 生产预览：nginx 托管 dist ----------
-  # cd admin && docker compose up -d --build   访问 http://localhost:8080
+  # cd admin && docker compose up -d --build admin-web   访问 http://localhost:3000
   admin-web:
     image: erp-admin-web:latest
     build:
@@ -12,8 +12,8 @@ services:
       dockerfile: Dockerfile
       target: runtime
       args:
-        # 后端未就绪时保持 true，前端使用内置 mock 数据
-        VITE_USE_MOCK: 'true'
+        # 默认请求真实后端；演示时可通过环境变量切回 true，切换后需要重新构建
+        VITE_USE_MOCK: '${VITE_USE_MOCK:-false}'
         VITE_API_BASE_URL: '/api'
     container_name: erp-admin-web
     ports:
@@ -32,7 +32,7 @@ services:
       start_period: 5s
 
   # ---------- 开发模式：容器内跑 vite dev server ----------
-  # cd admin && docker compose --profile dev up   访问 http://localhost:5173
+  # cd admin && docker compose --profile dev up -d admin-web-dev   访问 http://localhost:5173
   admin-web-dev:
     profiles: ['dev']
     image: node:22-alpine
@@ -44,6 +44,11 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - CHOKIDAR_USEPOLLING=true
+      - VITE_USE_MOCK=${VITE_USE_MOCK:-false}
+      - VITE_API_BASE_URL=/api
+      - VITE_PROXY_TARGET=http://host.docker.internal:8080
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       # 只挂载 admin 目录，node_modules 使用命名卷（不污染宿主机、不跨平台混淆）
       - ./:/app
