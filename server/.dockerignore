@@ -14,3 +14,7 @@
 
 .runtime
 **/node_modules
+
+# Server deployment secrets stay outside image build context
+**/.env
+**/.env.*

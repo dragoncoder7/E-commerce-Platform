@@ -1,0 +1,45 @@
+-- 必须将两个 REPLACE_WITH_BCRYPT_HASH 替换为同一有效BCrypt哈希，否则不会创建账号。
+-- MySQL 8.0：首次初始化 ERP 管理员。
+-- 前置：先执行项目 Flyway 迁移至 V003.1，确保全部表及权限数据就绪。
+-- 数据库名不同请修改下一行。在同一连接中按顺序执行整个脚本。
+-- 不重置、不启用、不提权已有账号；已有启用管理员时也不创建。
+USE `ecommerce_system`;
+SET NAMES utf8mb4;
+
+START TRANSACTION;
+SET @bootstrap_user_id = NULL;
+
+INSERT INTO `sys_user`
+  (`username`, `password`, `nickname`, `status`, `deleted`, `session_version`, `create_time`, `update_time`)
+SELECT
+  'erp_admin',
+  'REPLACE_WITH_BCRYPT_HASH',
+  '系统管理员', 1, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM `sys_role` AS r
+WHERE 'REPLACE_WITH_BCRYPT_HASH' REGEXP '^[$]2[aby][$][0-9]{2}[$][./A-Za-z0-9]{53}$'
+  AND r.`code` = 'admin' AND r.`status` = 1 AND r.`deleted` = 0
+  AND NOT EXISTS (
+    SELECT 1 FROM `sys_user` AS u WHERE u.`username` = 'erp_admin'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM `sys_user` AS u
+    INNER JOIN `sys_user_role` AS ur ON ur.`user_id` = u.`id`
+    INNER JOIN `sys_role` AS ar ON ar.`id` = ur.`role_id`
+    WHERE u.`status` = 1 AND u.`deleted` = 0
+      AND ar.`code` = 'admin' AND ar.`status` = 1 AND ar.`deleted` = 0
+  );
+
+SET @bootstrap_user_id = IF(ROW_COUNT() = 1, LAST_INSERT_ID(), NULL);
+
+INSERT INTO `sys_user_role` (`user_id`, `role_id`, `create_time`)
+SELECT @bootstrap_user_id, r.`id`, CURRENT_TIMESTAMP
+FROM `sys_role` AS r
+WHERE @bootstrap_user_id IS NOT NULL
+  AND r.`code` = 'admin' AND r.`status` = 1 AND r.`deleted` = 0;
+
+COMMIT;
+
+SELECT CASE WHEN @bootstrap_user_id IS NOT NULL
+  THEN 'CREATED: erp_admin'
+  ELSE 'SKIPPED: 用户名已存在、已有启用管理员，或admin角色不存在/未启用；未修改现有账号'
+END AS `initialization_result`;

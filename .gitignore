@@ -64,3 +64,6 @@ test-results/
 # Python verification cache
 __pycache__/
 *.py[cod]
+
+# Filled server bootstrap SQL contains a usable password hash
+/server/deploy/initialize-erp-admin.sql

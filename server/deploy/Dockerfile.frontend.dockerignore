@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/target
+**/.runtime
+**/.env
+**/.env.*
+**/application-local.yml
+**/*.log
+**/*.iml
+**/.git
+**/test-results
+**/playwright-report
+.git
