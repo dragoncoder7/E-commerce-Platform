@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useUserStore } from '@/stores/modules/user'
+const permissionUser = useUserStore()
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
@@ -120,7 +122,7 @@ onMounted(load)
         <el-option label="启用" :value="1" /><el-option label="停用" :value="0" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" :disabled="busy" @click="load">刷新</el-button>
-      <el-button type="primary" :icon="Plus" :disabled="loading || busy || !!error" @click="edit()">新增类别</el-button>
+      <el-button v-if="permissionUser.hasPermission('product:write')" type="primary" :icon="Plus" :disabled="loading || busy || !!error" @click="edit()">新增类别</el-button>
       <span class="text-xs text-slate-400">共 {{ rows.length }} 个类别</span>
     </div>
     <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon><el-button link @click="load">重试</el-button></el-alert>
@@ -131,10 +133,10 @@ onMounted(load)
       <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '启用' : '停用' }}</el-tag></template></el-table-column>
       <el-table-column prop="description" label="说明" min-width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="270" fixed="right"><template #default="{ row }">
-        <el-button link type="primary" :disabled="busy || loading || !!error || !categoryEnabled(row, rows)" @click="edit(undefined, row.id)">新增子类</el-button>
-        <el-button link type="primary" :disabled="busy || loading || !!error" @click="edit(row)">编辑</el-button>
-        <el-button link type="warning" :disabled="busy || loading || !!error" @click="toggle(row)">{{ row.status === 1 ? '停用' : '启用' }}</el-button>
-        <el-button link type="danger" :disabled="busy || loading || !!error" @click="remove(row)">删除</el-button>
+        <el-button v-if="permissionUser.hasPermission('product:write')" link type="primary" :disabled="busy || loading || !!error || !categoryEnabled(row, rows)" @click="edit(undefined, row.id)">新增子类</el-button>
+        <el-button v-if="permissionUser.hasPermission('product:write')" link type="primary" :disabled="busy || loading || !!error" @click="edit(row)">编辑</el-button>
+        <el-button v-if="permissionUser.hasPermission('product:write')" link type="warning" :disabled="busy || loading || !!error" @click="toggle(row)">{{ row.status === 1 ? '停用' : '启用' }}</el-button>
+        <el-button v-if="permissionUser.hasPermission('product:write')" link type="danger" :disabled="busy || loading || !!error" @click="remove(row)">删除</el-button>
       </template></el-table-column>
       <template #empty><el-empty :image-size="70" :description="error ? '类别加载失败，请重试' : rows.length ? '没有符合条件的类别' : '暂无类别，点击新增类别开始配置'" /></template>
     </el-table>

@@ -34,7 +34,12 @@ router.beforeEach(async (to) => {
   if (to.path === '/login') return { path: '/', replace: true }
 
   // 3. 动态路由已就绪
-  if (permissionStore.isLoaded) return true
+  if (permissionStore.isLoaded) {
+    if (to.matched.some(record => !userStore.hasPermission(record.meta.permission))) {
+      return { path: '/forbidden', replace: true }
+    }
+    return true
+  }
 
   // 4. 首次进入：拉取用户信息 + 菜单，注册动态路由后重新匹配
   try {

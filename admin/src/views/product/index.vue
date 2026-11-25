@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useUserStore } from '@/stores/modules/user'
+const permissionUser = useUserStore()
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
@@ -9,6 +11,12 @@ import {
 } from '@/api/product'
 
 import CategoryManager from '@/components/CategoryManager.vue'
+import SkuManager from '@/components/SkuManager.vue'
+import ProductImages from '@/components/ProductImages.vue'
+const imageProductId = ref<number>()
+const imageVisible = ref(false)
+const skuProductId = ref<number>()
+const skuVisible = ref(false)
 import { categoryEnabled, categoryTree } from '@/utils/category'
 
 const route = useRoute()
@@ -185,7 +193,7 @@ onMounted(async () => {
         <h2 class="mt-1 text-xl font-semibold">商品管理</h2>
         <p class="mt-2 text-xs text-slate-400">管理商品信息、价格与库存，让每一次上架都有条不紊。</p>
       </div>
-      <div class="flex gap-2"><el-button @click="router.push('/product/category')">管理类别</el-button><el-button type="primary" :icon="Plus" @click="openCreate">新增商品</el-button></div>
+      <div class="flex gap-2"><el-button @click="router.push('/product/category')">管理类别</el-button><el-button v-if="permissionUser.hasPermission('product:write')" type="primary" :icon="Plus" @click="openCreate">新增商品</el-button></div>
     </section>
 
     <section class="app-card p-4">
@@ -217,7 +225,7 @@ onMounted(async () => {
         <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status === 1 ? 'success' : 'info'" effect="light">{{ row.status === 1 ? '已上架' : '已下架' }}</el-tag></template></el-table-column>
         <el-table-column label="标签" width="150"><template #default="{ row }"><div class="flex flex-wrap gap-1"><el-tag v-if="row.isNew" size="small">新品</el-tag><el-tag v-if="row.isHot" type="danger" size="small">热销</el-tag><el-tag v-if="row.isRecommend" type="warning" size="small">推荐</el-tag><span v-if="!row.isNew && !row.isHot && !row.isRecommend" class="text-slate-300">—</span></div></template></el-table-column>
         <el-table-column label="更新时间" width="175"><template #default="{ row }"><span class="text-xs">{{ time(row.updateTime) }}</span></template></el-table-column>
-        <el-table-column label="操作" fixed="right" width="170"><template #default="{ row }"><el-button link type="primary" :disabled="busyId === row.id" @click="openDetail(row)">详情</el-button><el-button link type="primary" :disabled="busyId === row.id" @click="openEdit(row)">编辑</el-button><el-button link type="danger" :disabled="busyId === row.id" @click="remove(row)">删除</el-button></template></el-table-column>
+        <el-table-column label="操作" fixed="right" width="275"><template #default="{ row }"><el-button link type="primary" @click="skuProductId = row.id; skuVisible = true">规格库存</el-button><el-button link type="primary" @click="imageProductId = row.id; imageVisible = true">图片</el-button><el-button link type="primary" :disabled="busyId === row.id" @click="openDetail(row)">详情</el-button><el-button v-if="permissionUser.hasPermission('product:write')" link type="primary" :disabled="busyId === row.id" @click="openEdit(row)">编辑</el-button><el-button v-if="permissionUser.hasPermission('product:write')" link type="danger" :disabled="busyId === row.id" @click="remove(row)">删除</el-button></template></el-table-column>
         <template #empty><el-empty :description="error ? '暂时无法加载商品' : '暂无符合条件的商品'" :image-size="80"><el-button v-if="!error" type="primary" plain @click="openCreate">新增商品</el-button></el-empty></template>
       </el-table>
       <div class="overflow-x-auto border-t border-slate-100 p-4"><el-pagination v-model:current-page="query.pageNum" v-model:page-size="query.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="search" @current-change="loadList" /></div>
@@ -231,9 +239,9 @@ onMounted(async () => {
           <el-form-item label="商品名称" prop="productName"><el-input v-model="form.productName" maxlength="200" placeholder="请输入商品名称" /></el-form-item>
           <el-form-item label="商品分类" prop="categoryId"><el-tree-select v-model="form.categoryId" :data="categoryOptions" :props="{ label: 'categoryName', value: 'id' }" node-key="id" check-strictly filterable default-expand-all placeholder="选择启用的类别" class="w-full" /><el-button link type="primary" @click="categoryDialog = true">管理类别</el-button><el-button link :disabled="saving" @click="loadOptions">刷新类别</el-button></el-form-item>
           <el-form-item label="品牌"><el-select v-model="form.brandId" filterable clearable placeholder="可选" class="w-full"><el-option v-for="b in options.brands" :key="b.id" :label="b.brandName" :value="b.id" /></el-select></el-form-item>
-          <el-form-item label="售价（元）" prop="salePrice"><el-input-number v-model="form.salePrice" :min="0" :max="99999999.99" :precision="2" controls-position="right" class="!w-full" /></el-form-item>
+          <el-form-item label="售价（元）" prop="salePrice"><el-input-number :disabled="!!form.id" v-model="form.salePrice" :min="0" :max="99999999.99" :precision="2" controls-position="right" class="!w-full" /></el-form-item>
           <el-form-item label="原价（元，可选）"><el-input-number v-model="form.originalPrice" :min="0" :max="99999999.99" :precision="2" controls-position="right" class="!w-full" /></el-form-item>
-          <el-form-item label="库存" prop="stock"><el-input-number v-model="form.stock" :min="0" :max="2147483647" :precision="0" controls-position="right" class="!w-full" /></el-form-item>
+          <el-form-item label="库存" prop="stock"><el-input-number :disabled="!!form.id" v-model="form.stock" :min="0" :max="2147483647" :precision="0" controls-position="right" class="!w-full" /></el-form-item>
           <el-form-item label="计量单位" prop="unit"><el-input v-model="form.unit" maxlength="20" placeholder="件 / 台 / 盒" /></el-form-item>
           <el-form-item label="商品状态"><el-radio-group v-model="form.status"><el-radio-button :value="0">下架</el-radio-button><el-radio-button :value="1">上架</el-radio-button></el-radio-group></el-form-item>
           <el-form-item label="排序（越小越靠前）"><el-input-number v-model="form.sortOrder" :min="0" :max="2147483647" :precision="0" controls-position="right" class="!w-full" /></el-form-item>
@@ -251,6 +259,8 @@ onMounted(async () => {
       <template #footer><el-button @click="categoryDialog = false">返回商品表单</el-button></template>
     </el-dialog>
 
+    <el-dialog v-model="imageVisible" title="商品图片" width="min(800px,94vw)" destroy-on-close><ProductImages v-if="imageProductId" :product-id="imageProductId" /></el-dialog>
+    <el-dialog v-model="skuVisible" title="规格与库存" width="min(1000px, 96vw)" destroy-on-close @closed="loadList"><SkuManager v-if="skuProductId" :product-id="skuProductId" /></el-dialog>
     <el-dialog v-model="detailVisible" title="商品详情" width="min(720px, 94vw)">
       <template v-if="detail">
         <div class="mb-5 flex items-center gap-4"><el-image v-if="detail.mainImage" :src="detail.mainImage" fit="cover" class="h-24 w-24 rounded-lg" /><div><h3 class="text-lg font-semibold">{{ detail.productName }}</h3><p class="mt-1 text-sm text-slate-500">{{ detail.subTitle }}</p><p class="mt-2 text-xl font-semibold text-blue-600">{{ money(detail.salePrice) }}</p></div></div>

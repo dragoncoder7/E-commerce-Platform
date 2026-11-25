@@ -1,0 +1,28 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: store-service
+  config:
+    import: optional:nacos:store-service.yml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ecommerce_system?serverTimezone=Asia/Shanghai}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+jwt:
+  secret: ${STORE_JWT_SECRET}
+  audience: store
+  expiration: 7200000
+
+store:
+  mail:
+    mode: ${STORE_MAIL_MODE:disabled}
+    api-key: ${RESEND_API_KEY:}
+    from: ${STORE_MAIL_FROM:}
+    capture-path: ${STORE_MAIL_CAPTURE_PATH:.runtime/mail}

@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { RouteRecordRaw } from 'vue-router'
 import router from '@/router'
+import { useUserStore } from './user'
 import { LayoutComponent, constantRoutes } from '@/router/routes'
 import type { MenuItem, SidebarNode } from '@/types/menu'
 
@@ -137,7 +138,7 @@ export const usePermissionStore = defineStore('permission', () => {
   const sidebarMenus = computed<SidebarNode[]>(() => {
     const staticChildren = constantRoutes.find((route) => route.path === '/')?.children ?? []
     const staticNodes: SidebarNode[] = staticChildren
-      .filter((child) => !child.meta?.hidden)
+      .filter((child) => !child.meta?.hidden && useUserStore().hasPermission(child.meta?.permission))
       .map((child) => ({
         path: `/${String(child.path)}`.replace(/\/+/g, '/'),
         title: String(child.meta?.title ?? ''),

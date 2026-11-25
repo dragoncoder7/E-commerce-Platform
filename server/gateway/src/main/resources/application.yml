@@ -15,7 +15,7 @@ spring:
         # 默认 public 保证开箱可用；要切 dev 需先在 Nacos 控制台创建 ID=dev 的命名空间
         namespace: ${NACOS_NAMESPACE:public}
         group: DEFAULT_GROUP
-        register-enabled: true
+        register-enabled: false
       config:
         server-addr: ${SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:public}
@@ -24,12 +24,30 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
       routes:
+        - id: media
+          uri: ${STORE_SERVICE_URI:lb://store-service}
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=1
+        - id: store
+          uri: ${STORE_SERVICE_URI:lb://store-service}
+          predicates:
+            - Path=/api/store/**
+          filters:
+            - StripPrefix=2
+        - id: erp
+          uri: ${ERP_SERVICE_URI:lb://erp-service}
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=2
         # 系统服务路由
         - id: system-service
-          uri: lb://system-service
+          uri: ${ERP_SERVICE_URI:lb://erp-service}
           predicates:
             - Path=/api/auth/**,/api/menu/**,/api/dashboard/**,/api/product/**,/api/upload/**
           filters:

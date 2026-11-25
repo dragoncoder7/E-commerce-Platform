@@ -18,8 +18,11 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:ecommerce-platform-secret-key-for-jwt-token-generation-must-be-at-least-256-bits}")
+    @Value("${jwt.secret}")
     private String secret;
+
+    @Value("${jwt.audience:erp}")
+    private String audience = "erp";
 
     /**
      * -- GETTER --
@@ -52,6 +55,7 @@ public class JwtUtil {
 
         var builder = Jwts.builder()
                 .subject(subject)
+                .audience().add(audience).and()
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey());
@@ -69,6 +73,7 @@ public class JwtUtil {
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
+                .requireAudience(audience)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

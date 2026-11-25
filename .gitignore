@@ -47,3 +47,20 @@ Thumbs.db
 .workbuddy/
 /server/.env
 /.dsh-acl-recovery/
+
+/server/modules/erp/erp-service/src/main/resources/application-local.yml
+/server/.runtime/
+
+# Local credentials, editor metadata and browser artifacts
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.iml
+**/src/main/resources/application-local.yml
+playwright-report/
+test-results/
+
+# Python verification cache
+__pycache__/
+*.py[cod]

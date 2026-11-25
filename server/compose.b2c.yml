@@ -1,0 +1,79 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      MYSQL_DATABASE: ecommerce_system
+      TZ: Asia/Shanghai
+    ports: ['13306:3306']
+    volumes: [b2c_mysql:/var/lib/mysql]
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -uroot -p"$$MYSQL_ROOT_PASSWORD"']
+      interval: 5s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    ports: ['16379:6379']
+  nacos:
+    image: nacos/nacos-server:v2.3.0-slim
+    environment:
+      MODE: standalone
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+    ports: ['18848:8848', '19848:9848']
+  migrate:
+    image: flyway/flyway:10.20.1
+    command: migrate
+    environment:
+      FLYWAY_URL: jdbc:mysql://mysql:3306/ecommerce_system?allowPublicKeyRetrieval=true&useSSL=false
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD: ${DB_PASSWORD}
+    volumes: ['./sql/migrations:/flyway/sql:ro']
+    depends_on:
+      mysql: {condition: service_healthy}
+  erp:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args: {MODULE: modules/erp/erp-service}
+    environment: &app_env
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_system?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      ERP_JWT_SECRET: ${ERP_JWT_SECRET:?Set ERP_JWT_SECRET}
+      STORE_JWT_SECRET: ${STORE_JWT_SECRET:?Set STORE_JWT_SECRET}
+      MEDIA_PATH: /data/media
+    ports: ['18081:8081']
+    volumes: [b2c_media:/data/media]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  store:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args: {MODULE: modules/store/store-service}
+    environment: *app_env
+    ports: ['18082:8082']
+    volumes: [b2c_media:/data/media]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args: {MODULE: gateway}
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      SPRING_DATA_REDIS_HOST: redis
+      ERP_SERVICE_URI: http://erp:8081
+      STORE_SERVICE_URI: http://store:8082
+    ports: ['18080:8080']
+volumes:
+  b2c_mysql:
+  b2c_media:

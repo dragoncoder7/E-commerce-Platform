@@ -310,7 +310,7 @@ onMounted(fetchList)
 
         <div class="flex items-center gap-2">
           <el-button
-            v-if="userStore.hasPermission('system:menu:create')"
+            v-if="userStore.hasPermission('menu:write')"
             type="primary"
             :icon="Plus"
             @click="openCreate(0)"
@@ -395,7 +395,7 @@ onMounted(fetchList)
               :active-value="1"
               :inactive-value="0"
               size="small"
-              :disabled="!userStore.hasPermission('system:menu:update')"
+              :disabled="!userStore.hasPermission('menu:write')"
               @change="handleStatusChange(row)"
             />
           </template>
@@ -411,7 +411,7 @@ onMounted(fetchList)
           <template #default="{ row }">
             <div class="flex items-center">
               <el-button
-                v-if="userStore.hasPermission('system:menu:update')"
+                v-if="userStore.hasPermission('menu:write')"
                 link
                 type="primary"
                 size="small"
@@ -421,7 +421,7 @@ onMounted(fetchList)
                 修改
               </el-button>
               <el-button
-                v-if="row.type !== 'button' && userStore.hasPermission('system:menu:create')"
+                v-if="row.type !== 'button' && userStore.hasPermission('menu:write')"
                 link
                 type="primary"
                 size="small"
@@ -431,7 +431,7 @@ onMounted(fetchList)
                 子菜单
               </el-button>
               <el-button
-                v-if="userStore.hasPermission('system:menu:delete')"
+                v-if="userStore.hasPermission('menu:write')"
                 link
                 type="danger"
                 size="small"
@@ -513,7 +513,7 @@ onMounted(fetchList)
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="权限标识" prop="permission">
-              <el-input v-model="form.permission" placeholder="如：order:list:query" />
+              <el-input v-model="form.permission" placeholder="如：product:write" />
             </el-form-item>
           </el-col>
           <el-col :span="12">

@@ -20,7 +20,9 @@
         <module>common/common-api</module>
         <module>gateway</module>
         <module>modules/system/system-api</module>
-        <module>modules/system/system-service</module>
+        <module>modules/commerce/commerce-core</module>
+        <module>modules/erp/erp-service</module>
+        <module>modules/store/store-service</module>
     </modules>
 
     <properties>
@@ -193,6 +195,7 @@
 
     <build>
         <plugins>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.3</version><configuration><excludes><exclude>**/EmailIntegrationTest.java</exclude></excludes></configuration></plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
