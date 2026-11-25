@@ -1,5 +1,7 @@
 # E-commerce-Platform
 
+> 当前 B2C 实现已拆分为 ERP 与商城服务。启动请使用 `server/compose.b2c.yml`（在 server 目录为 `compose.b2c.yml`），参见[阶段交付与验证说明](server/docs/GIT_DELIVERY.md)。本文下方的旧 system-service / docker-compose.yml 步骤尚待迁移，不适用于当前双服务结构。
+
 > 自己做的一个电商平台。
 
 本仓库采用**多目录（monorepo）**方式组织，各模块独立成子目录、各自拥有构建与部署配置，互不干扰：

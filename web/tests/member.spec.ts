@@ -1,0 +1,65 @@
+import { test, expect } from '@playwright/test'
+import fs from 'node:fs'
+import crypto from 'node:crypto'
+
+for (const width of [1440, 1200, 390]) {
+  test(`商城注册登录完整流程 ${width}px`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
+    page.on('response', response => { if (response.status() >= 400 && response.url().includes('127.0.0.1')) errors.push(`${response.status()} ${response.url()}`) })
+    await page.setViewportSize({ width, height: 980 })
+    await page.goto('http://127.0.0.1:5174/account')
+    await expect(page).toHaveURL(/login\?redirect=/)
+    await page.getByRole('link', { name: '立即注册' }).click()
+    const account = 'browser_' + Date.now()
+    await page.getByLabel('账号', { exact: true }).fill(account)
+    await page.getByLabel('密码', { exact: true }).fill('BrowserTest123!')
+    await page.getByLabel('确认密码', { exact: true }).fill('BrowserTest123!')
+    await page.screenshot({ path: `../server/.runtime/store-register-${width}.png`, fullPage: true })
+    await page.getByRole('button', { name: '注册账号', exact: true }).click()
+    await expect(page).toHaveURL(/login/)
+    await page.getByLabel('账号 / 手机号 / 邮箱', { exact: true }).fill(account)
+    await page.getByLabel('密码', { exact: true }).fill('BrowserTest123!')
+    await page.getByRole('button', { name: '登录商城' }).click()
+    await expect(page.getByRole('heading', { name: '个人中心', exact: true })).toBeVisible()
+    await page.getByLabel('昵称', { exact: true }).fill('拾光体验会员')
+    await page.getByRole('button', { name: '保存资料' }).click()
+    await expect(page.getByText('你好，拾光体验会员')).toBeVisible()
+    await page.reload()
+    await expect(page.getByText('你好，拾光体验会员')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBeTruthy()
+    await page.screenshot({ path: `../server/.runtime/store-account-${width}.png`, fullPage: true })
+    await page.getByRole('button', { name: '退出登录' }).click()
+    await expect(page.getByRole('link', { name: '登录', exact: true })).toBeVisible()
+    expect(errors).toEqual([])
+  })
+}
+
+test('邮箱验证码注册、登录返回商品页以及修改密码', async ({ page }) => {
+  const email = `browser_${Date.now()}@example.com`
+  await page.goto('http://127.0.0.1:5174/register?redirect=/products')
+  await page.getByRole('button', { name: '邮箱注册', exact: true }).click()
+  await page.getByLabel('邮箱', { exact: true }).fill(email)
+  await page.getByLabel('密码', { exact: true }).fill('BrowserTest123!')
+  await page.getByLabel('确认密码', { exact: true }).fill('BrowserTest123!')
+  await page.getByRole('button', { name: '获取验证码' }).click()
+  await expect(page.getByRole('button', { name: /秒后重发/ })).toBeDisabled()
+  const captured = JSON.parse(fs.readFileSync(`../server/.runtime/mail/${crypto.createHash('sha256').update(email).digest('hex')}.json`, 'utf8')) as { code: string }
+  await page.getByLabel('邮箱验证码', { exact: true }).fill(captured.code)
+  await page.getByRole('button', { name: '注册账号' }).click()
+  await expect(page).toHaveURL(/login/)
+  await page.getByLabel('账号 / 手机号 / 邮箱').fill(email)
+  await page.getByLabel('密码', { exact: true }).fill('BrowserTest123!')
+  await page.getByRole('button', { name: '登录商城' }).click()
+  await expect(page).toHaveURL('http://127.0.0.1:5174/products')
+  await page.getByRole('link', { name: '个人中心' }).click()
+  await page.getByLabel('原密码', { exact: true }).fill('BrowserTest123!')
+  await page.getByLabel('新密码', { exact: true }).fill('Changed123!')
+  await page.getByLabel('确认新密码', { exact: true }).fill('Changed123!')
+  await page.getByRole('button', { name: '更新密码' }).click()
+  await expect(page).toHaveURL(/login/)
+  await page.getByLabel('账号 / 手机号 / 邮箱').fill(email)
+  await page.getByLabel('密码', { exact: true }).fill('Changed123!')
+  await page.getByRole('button', { name: '登录商城' }).click()
+  await expect(page.getByRole('heading', { name: '个人中心', exact: true })).toBeVisible()
+})

@@ -1,0 +1,52 @@
+import { test, expect } from '@playwright/test'
+
+for (const width of [1440, 1200, 390]) {
+  test(`收货地址管理 ${width}px`, async ({ page, request }) => {
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
+    const account = `address_ui_${Date.now()}`
+    const created = await request.post('http://127.0.0.1:18080/api/store/auth/register', { data: { type: 'account', account, password: 'AddressTest123!' } })
+    expect((await created.json()).code).toBe(200)
+    await page.setViewportSize({ width, height: 980 })
+    await page.goto('http://127.0.0.1:5174/login')
+    await page.getByLabel('账号 / 手机号 / 邮箱').fill(account)
+    await page.getByLabel('密码', { exact: true }).fill('AddressTest123!')
+    await page.getByRole('button', { name: '登录商城' }).click()
+    await expect(page.getByRole('heading', { name: '收货地址', exact: true })).toBeVisible()
+    await expect(page.getByText('还没有收货地址，添加一个吧')).toBeVisible()
+    async function add(name: string, detail: string) {
+      await page.getByRole('button', { name: '新增地址', exact: true }).click()
+      const dialog = page.getByRole('dialog')
+      await dialog.getByRole('button', { name: '保存地址' }).click()
+      await expect(dialog.getByText('请输入收货人', { exact: true })).toBeVisible()
+      await dialog.getByLabel('收货人', { exact: true }).fill(name)
+      await dialog.getByLabel('收货电话', { exact: true }).fill('13800138000')
+      await dialog.getByLabel('省份', { exact: true }).fill('浙江省')
+      await dialog.getByLabel('城市', { exact: true }).fill('杭州市')
+      await dialog.getByLabel('区县', { exact: true }).fill('西湖区')
+      await dialog.getByLabel('详细地址', { exact: true }).fill(detail)
+      await dialog.getByRole('button', { name: '保存地址' }).click()
+      await expect(dialog).not.toBeVisible()
+    }
+    await add('家里', '拾光路1号')
+    const first = page.locator('.address-card').filter({ hasText: '家里' })
+    await expect(first.getByText('默认地址')).toBeVisible()
+    await add('公司', '好物路2号')
+    const second = page.locator('.address-card').filter({ hasText: '公司' })
+    await second.getByRole('button', { name: '设为默认' }).click()
+    await expect(second.getByText('默认地址')).toBeVisible()
+    await first.getByRole('button', { name: '编辑', exact: true }).click()
+    await page.getByRole('dialog').getByLabel('详细地址', { exact: true }).fill('拾光路8号')
+    await page.getByRole('dialog').getByRole('button', { name: '保存地址' }).click()
+    await expect(first).toContainText('拾光路8号')
+    await page.reload()
+    await expect(second.getByText('默认地址')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBeTruthy()
+    await page.screenshot({ path: `../server/.runtime/store-address-${width}.png`, fullPage: true })
+    await second.getByRole('button', { name: '删除', exact: true }).click()
+    await page.getByRole('button', { name: '确认删除', exact: true }).click()
+    await expect(page.locator('.address-card')).toHaveCount(1)
+    await expect(first.getByText('默认地址')).toBeVisible()
+    expect(errors).toEqual([])
+  })
+}
